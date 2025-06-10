@@ -1,0 +1,52 @@
+{
+  "color": [
+    {
+    "name": "start_window_background",
+    "value": "#fff"
+    },
+    {
+      "name": "window_background",
+      "value": "#ffffff"
+    },
+    {
+      "name": "content_background",
+      "value": "#ecf0f3"
+    },
+    {
+      "name": "text_default",
+      "value": "#000001"
+    },
+    {
+      "name": "icon_svg_default",
+      "value": "#86868f"
+    },
+    {
+      "name": "icon_svg_selected",
+      "value": "#3ce68e"
+    },
+    {
+      "name": "text_input_background",
+      "value": "#e8e9ed"
+    },
+    {
+      "name": "text_gray",
+      "value": "#635f60"
+    },
+    {
+      "name": "tab_divider",
+      "value": "#ecf0f3"
+    },
+    {
+      "name": "label_background",
+        "value": "#99ffffff"
+    },
+    {
+      "name": "label_text",
+      "value": "#000001"
+    },
+    {
+      "name": "top_tabBar_text",
+      "value": "#1a1a1a"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+import {myHttp} from '../http/Http'
+//通过歌单id获取歌单详细信息
+// export function getSongListDetailById<T,K>(id:number){
+//   return myHttp<T,K>(`/playlist/detail?id=${id}`)
+// }
+//通过歌单id获取歌单详细信息
+export function getSongListDetailById<T,K>(id:number){
+  return myHttp<T,K>(`/playlist/track/all?id=${id}`)
+}
+//通过歌曲id获取歌曲播放url
+export function getSongUrlByIds<T,K>(songIds:number[]){
+  return myHttp<T,K>(`/song/url?id=${songIds}`)
+}
+//通过歌曲id获取歌曲详细信息，这里主要为了拿歌曲时长
+export function getSongDetailByIds<T,K>(songIds:number[]){
+  return myHttp<T,K>(`/song/detail?ids=${songIds}`)
+}
+//通过歌手id获取歌手详细信息
+export function getSingerDetailById<T,K>(singerId:number){
+  return myHttp<T,K>(`/artist/detail?id=${singerId}`)
+}

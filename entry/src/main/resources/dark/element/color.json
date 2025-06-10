@@ -1,0 +1,52 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#000000"
+    },
+    {
+      "name": "window_background",
+      "value": "#3b3f42"
+    },
+    {
+      "name": "content_background",
+      "value": "#131215"
+    },
+    {
+      "name": "text_default",
+      "value": "#fcfcfc"
+    },
+    {
+      "name": "text_light",
+      "value": "#83868f"
+    },
+    {
+      "name": "icon_svg_default",
+      "value": "#6eafbb"
+    },
+    {
+      "name": "icon_svg_selected",
+      "value": "#e85a88"
+    },
+    {
+      "name": "text_gray",
+      "value": "#635f60"
+    },
+    {
+      "name": "text_input_background",
+      "value": "#e8e9ed"
+    },
+    {
+      "name": "tab_divider",
+      "value": "#3b3f42"
+    },
+    {
+      "name": "label_background",
+      "value": "#7f3b3f42"
+    },
+    {
+      "name": "label_text",
+      "value": "#fcfcfc"
+    }
+  ]
+}
