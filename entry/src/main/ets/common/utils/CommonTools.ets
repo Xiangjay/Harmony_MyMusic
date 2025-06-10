@@ -1,3 +1,15 @@
+//把播放量等数字转换成xx.xx万的形式
+export function countTransform(count:number):string{
+  if(count.toString().length >=5){
+    const a = count.toString().substring(0,count.toString().length-4)
+    const b = count.toString().substring(count.toString().length-4,count.toString().length-2)
+    return `${a}.${b}万`
+  }else {
+    return count.toString()
+  }
+}
+
+//转换歌曲时间
 export function numberToTime(number: number) {
   // 毫秒 → 秒 → 分+秒; 先判断是否大于1分钟
   if (number > 60 * 1000) {
@@ -22,6 +34,7 @@ export class Opt {
   SS:string = ''
 }
 
+//转换日期格式
 export function formatData(timestamp:number, format:string = 'yyyy-mm-dd'){
   let res:string = ''
   try {

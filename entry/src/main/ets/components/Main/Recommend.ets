@@ -2,7 +2,7 @@ import { BasicConstants } from '../../common/constants/BasicConstants'
 import {getRecommendSongList,getRecommendMVList, getRecommendNewSongs,
   getRecommendDjPrograms} from '../../common/apis/HomeApis'
 import {recommendSongList,recommendMVList, recommendNewSongs, albumArtist,recommendDjProgram} from '../../models/DataModel'
-import countTransform from '../../common/utils/CountTransformUtil'
+import { countTransform } from '../../common/utils/CommonTools'
 import {Title} from '../common/Title'
 import { router } from '@kit.ArkUI'
 

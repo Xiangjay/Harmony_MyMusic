@@ -3,7 +3,7 @@ import { router } from '@kit.ArkUI'
 import {getSingerDetailById} from '../common/apis/MusicApis'
 import {responseSinger} from '../models/DataModel'
 import { BasicConstants } from '../common/constants/BasicConstants'
-import { numberToTime } from '../common/utils/DateFormat'
+import { numberToTime } from '../common/utils/CommonTools'
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
 
 @Entry
@@ -67,23 +67,6 @@ struct Play {
     this.currentSong = this.currentPlayList.songs[this.playIndex]
     avPlayerManager.playSong(this.currentSong)
   }
-
-  @Builder
-  deleteButton(index: number) {
-    Button('删除')
-      .backgroundColor('#ec5c87')
-      .fontColor('#fff')
-      .width(80)
-      .height(BasicConstants.FULL_HEIGHT)
-      .type(ButtonType.Normal)
-      .onClick (()=>{
-        this.removeSong(index)
-        if(this.currentPlayList.songs.length === 0){ //如果当前没有歌单了则返回上一页
-          router.back()
-        }
-      })
-  }
-
   removeSong(index:number){
     if(this.playIndex === index){ //  删除的是正在播放的歌曲
       if(this.currentPlayList.songs.length > 1){ //  当前播放列表有多首歌曲
@@ -108,7 +91,21 @@ struct Play {
       AppStorage.setOrCreate('currentPlayList',this.currentPlayList)  //修改后要重新存到全局
     }
   }
-
+  @Builder
+  deleteButton(index: number) {
+    Button('删除')
+      .backgroundColor('#ec5c87')
+      .fontColor('#fff')
+      .width(80)
+      .height(BasicConstants.FULL_HEIGHT)
+      .type(ButtonType.Normal)
+      .onClick (()=>{
+        this.removeSong(index)
+        if(this.currentPlayList.songs.length === 0){ //如果当前没有歌单了则返回上一页
+          router.back()
+        }
+      })
+  }
   @Builder coverImgBuilder(){
     Stack({ alignContent: Alignment.Top }) {
       Row() {
@@ -145,7 +142,7 @@ struct Play {
         })
     }
   }
-  @Builder sliderBarBuilder(){
+  @Builder processBarBuilder(){
     Row({ space: 5 }) {
       Text(numberToTime(this.currentSong.time))
         .fontSize(BasicConstants.FONT_SIZE_XSMALL)
@@ -399,12 +396,24 @@ struct Play {
 
           Column() {
             //进度条
-            this.sliderBarBuilder()
+            this.processBarBuilder()
             //播放按钮
             this.playButtonsBuilder()
           }
           .width(BasicConstants.FULL_WIDTH)
         }
+        //返回按钮
+        Row(){
+          Image($r('app.media.icon_back'))
+            .width(50)
+            .height(50)
+            .margin({left:10})
+            .onClick(()=>{
+              router.back()
+            })
+        }
+        .justifyContent(FlexAlign.Start)
+        .width(BasicConstants.FULL_WIDTH)
       }
       this.playListBuilder()
     }

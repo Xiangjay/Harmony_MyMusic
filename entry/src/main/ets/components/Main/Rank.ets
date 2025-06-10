@@ -1,6 +1,6 @@
 import { getTopArtistList } from "../../common/apis/HomeApis"
 import { BasicConstants } from "../../common/constants/BasicConstants"
-import countTransform from "../../common/utils/CountTransformUtil"
+import { countTransform } from "../../common/utils/CommonTools"
 import { areaTopArtists, topArtist, topArtistsList } from "../../models/DataModel"
 import {Title} from '../common/Title'
 
@@ -97,7 +97,7 @@ export struct Rank {
                 Text('查看更多')
                   .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                   .fontColor($r('app.color.icon_svg_selected'))
-                Image($r('app.media.icon_doubleArrow_left'))
+                Image($r("app.media.icon_double_arrow_right"))
                   .width(20)
                   .fillColor($r('app.color.icon_svg_selected'))
               }

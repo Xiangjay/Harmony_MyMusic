@@ -56,7 +56,6 @@ struct Music {
         }
       })
     })
-
     //获取歌曲详细信息
     const responseSongDetail = await getSongDetailByIds<Array<songDetail>,null>(songIds)
     responseSongDetail.songs.forEach((item:songDetail)=>{
@@ -78,17 +77,29 @@ struct Music {
   }
 
   @Builder topCoverBuilder(){
-    Stack({alignContent:Alignment.BottomStart}){
-      Image(this.songList?.picUrl)
-        .width(BasicConstants.FULL_WIDTH)
-        .height('40%')
-        .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
-      Text(this.songList?.name)
-        .backgroundColor($r('app.color.label_background'))
-        .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-        .fontColor($r('app.color.label_text'))
-        .width(BasicConstants.FULL_WIDTH)
-        .padding(10)
+    Stack({alignContent:Alignment.TopStart}){
+      Stack({alignContent:Alignment.BottomStart}){
+        Image(this.songList?.picUrl)
+          .width(BasicConstants.FULL_WIDTH)
+          .height('40%')
+          .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
+        Text(this.songList?.name)
+          .backgroundColor($r('app.color.label_background'))
+          .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+          .fontColor($r('app.color.label_text'))
+          .width(BasicConstants.FULL_WIDTH)
+          .padding(10)
+      }
+      //返回按钮
+      Row(){
+        Image($r('app.media.icon_back'))
+          .width(50)
+          .height(50)
+          .margin({left:10})
+          .onClick(()=>{
+            router.back()
+          })
+      }
     }
   }
 
