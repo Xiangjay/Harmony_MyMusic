@@ -1,5 +1,6 @@
 import { media } from "@kit.MediaKit";
 import { playListModel, songModel,playMode} from '../../models/DataModel'
+import { aVSessionManger } from "./AVSessionManager";
 
 export class AVPlayerManager{
   //音频播放器
@@ -42,22 +43,28 @@ export class AVPlayerManager{
             break;
         }
       } else if(state === 'released'){
-        // this.currentSong.reset()
+        this.currentSong = new songModel()
+        AppStorage.setOrCreate('currentSong',this.currentSong)
       }
     })
     //监听时长变化
     this.audioPlayer.on('durationUpdate',(duration)=>{
       this.currentSong.duration = duration
+      //设置播控数据元数据
+      // aVSessionManger.setAVMetadata(this.currentSong)
     })
     //播放时监听播放时间
     this.audioPlayer.on('timeUpdate',(time)=>{
       this.currentSong.time = time
+      aVSessionManger.setAVPlayBackState(this.currentSong,AppStorage.get('currentPlayList')!)  //设置播控中心播放状态
     })
   }
 
   //播放歌曲
   async playSong(song:songModel){
+    aVSessionManger.startBackgroundTask() //申请长时任务
     this.currentSong = AppStorage.get('currentSong')!   //先从全局拿正在播放的currentSong
+    aVSessionManger.setAVPlayBackState(this.currentSong,AppStorage.get('currentPlayList')!)  //设置播控中心播放状态
     if(song.id === this.currentSong.id){  //要播放的歌曲就是当前currentSong，那就继续播放
       this.audioPlayer?.play()
       this.currentSong.isPlaying = true
@@ -72,6 +79,8 @@ export class AVPlayerManager{
     AppStorage.setOrCreate<songModel>('currentSong',this.currentSong) //全局保存正在播放的歌曲
     await this.audioPlayer?.reset()  // 切换歌曲需要先重置播放器
     this.audioPlayer!.url = song.url
+    //设置播控数据元数据
+    aVSessionManger.setAVMetadata(this.currentSong)
   }
 
   //调整播放进度
@@ -82,11 +91,54 @@ export class AVPlayerManager{
   paused(){
     this.audioPlayer?.pause()
     this.currentSong.isPlaying = false
+    aVSessionManger.setAVPlayBackState(this.currentSong,AppStorage.get('currentPlayList')!)  //设置播控中心播放状态
   }
 
+  //上一首
+  playPrev(){
+    const currentPlayList:playListModel = AppStorage.get('currentPlayList')!
+    let playIndex:number = currentPlayList.songs.findIndex(song=>song.id === this.currentSong.id)
+    switch (currentPlayList.playMode) {
+      case playMode.random: //随机模式
+        playIndex = Math.floor(Math.random() * currentPlayList.songs.length)
+        break;
+      default:  //自动播放模式和单曲循环模式时，当用户点击上一首和下一首是和自动播放模式一样的
+        if(playIndex != 0){
+          playIndex--
+        }else{
+          playIndex = currentPlayList.songs.length - 1
+        }
+        break;
+    }
+    this.currentSong = currentPlayList.songs[playIndex]
+    this.playSong(this.currentSong)
+  }
+  //下一首
+  playNext(){
+    const currentPlayList:playListModel = AppStorage.get('currentPlayList')!
+    let playIndex:number = currentPlayList.songs.findIndex(song=>song.id === this.currentSong.id)
+    switch (currentPlayList.playMode) {
+      case playMode.random: //随机模式
+        playIndex = Math.floor(Math.random() * currentPlayList.songs.length)
+        break;
+      default:  //自动播放模式和单曲循环模式时，当用户点击上一首和下一首是和自动播放模式一样的
+        if(playIndex !== currentPlayList.songs.length - 1){
+          playIndex++
+        }else{
+          playIndex = 0
+        }
+        break;
+    }
+    this.currentSong = currentPlayList.songs[playIndex]
+    this.playSong(this.currentSong)
+  }
   //重置播放器
   reset(){
     this.audioPlayer?.reset()
+  }
+  //注销播放器
+  async release(){
+    await this.audioPlayer?.release()
   }
 }
 

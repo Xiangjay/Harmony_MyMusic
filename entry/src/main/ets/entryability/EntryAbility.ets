@@ -4,6 +4,7 @@ import { window } from '@kit.ArkUI';
 import { BreakPointTool } from '../common/utils/BreakPointTool'
 import { preferencesUtil } from '../common/utils/PreferencesUtils';
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
+import { aVSessionManger } from '../common/utils/AVSessionManager';
 
 const DOMAIN = 0x0000;
 
@@ -39,6 +40,7 @@ export default class EntryAbility extends UIAbility {
       this.breakPointTool.breakPointRegister()
       //初始化封装好的媒体播放器
       avPlayerManager.initAudioPlayer()
+      aVSessionManger.initAvSession(this.context)
       if (err.code) {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
         return;
@@ -49,6 +51,8 @@ export default class EntryAbility extends UIAbility {
 
   onWindowStageDestroy(): void {
     this.breakPointTool.breakPointerOffRegister()
+    aVSessionManger.destroy()
+    avPlayerManager.release()
     // Main window is destroyed, release UI related resources
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageDestroy');
     // this.breakPointTool.breakPointerOffRegister()

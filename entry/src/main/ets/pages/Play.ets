@@ -195,9 +195,10 @@ struct Play {
         .fillColor(Color.White)
         .width(30)
         .onClick(()=>{
-          if(this.currentPlayList.songs.length > 1){
-            this.playPrev()
-          }
+          avPlayerManager.playPrev()
+          // if(this.currentPlayList.songs.length > 1){
+          //   this.playPrev()
+          // }
         })
       // 播放按钮
       Image(this.currentSong.isPlaying ? $r("app.media.icon_paused") : $r("app.media.icon_play"))
