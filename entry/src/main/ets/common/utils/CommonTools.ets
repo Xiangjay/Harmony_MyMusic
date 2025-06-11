@@ -1,9 +1,10 @@
 //把播放量等数字转换成xx.xx万的形式
-export function countTransform(count:number):string{
+export function countTransform(count:number,float=true):string{
   if(count.toString().length >=5){
     const a = count.toString().substring(0,count.toString().length-4)
     const b = count.toString().substring(count.toString().length-4,count.toString().length-2)
-    return `${a}.${b}万`
+    const result:string = float? `${a}.${b}万` : `${a}万`
+    return result
   }else {
     return count.toString()
   }

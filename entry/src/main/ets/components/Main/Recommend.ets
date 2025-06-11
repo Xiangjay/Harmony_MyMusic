@@ -22,6 +22,7 @@ export struct Recommend {
   //获取推荐MV
   getRecommendMVList = async () =>{
     const res = await getRecommendMVList<Array<recommendMVList>,null>()
+
     this.recommendMVList = res.result
   }
   //获取推荐新歌
@@ -44,9 +45,9 @@ export struct Recommend {
 
   aboutToAppear(): void {
     this.getRecommendSongList()
-    // this.getRecommendMVList()
-    // this.getRecommendNewSons()
-    // this.getRecommendDjProgramsList()
+    this.getRecommendMVList()
+    this.getRecommendNewSons()
+    this.getRecommendDjProgramsList()
   }
 
   @Builder recommendSongListBuilder(){
@@ -183,7 +184,7 @@ export struct Recommend {
                 .textOverflow({overflow:TextOverflow.Ellipsis})
                 .fontSize(BasicConstants.FONT_SIZE_NORMAL)
               Image(item.picUrl)
-                .width('100%')
+                .width(BasicConstants.FULL_WIDTH)
                 .borderRadius(5)
                 .onClick(()=>{
                   this.currentIndex = 3

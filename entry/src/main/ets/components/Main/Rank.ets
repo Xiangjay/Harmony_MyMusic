@@ -16,7 +16,6 @@ export struct Rank {
     const chinaTopArtists = await getTopArtistList<topArtistsList,null>(1)
     //默认展示前五名数据
     this.chinaTopArtists = chinaTopArtists.list.artists.slice(0,5)
-    console.log(JSON.stringify(this.chinaTopArtists[0].id))
     const europeTopArtists = await getTopArtistList<topArtistsList,null>(2)
     this.europeTopArtists = europeTopArtists.list.artists.slice(0,5)
     this.topArtistsArea.push({area:'华语榜',artists:this.chinaTopArtists})

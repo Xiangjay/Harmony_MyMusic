@@ -1,12 +1,12 @@
 import { media } from "@kit.MediaKit";
 import { playListModel, songModel,playMode} from '../../models/DataModel'
 import { aVSessionManger } from "./AVSessionManager";
+import log from '@open/log'
 
 export class AVPlayerManager{
   //音频播放器
   private audioPlayer: media.AVPlayer | null = null
 
-  // currentSong:songModel = new songModel()
   currentSong:songModel = AppStorage.get('currentSong')!
 
   //初始化音乐播放器并监听播放状态
@@ -64,8 +64,8 @@ export class AVPlayerManager{
   async playSong(song:songModel){
     aVSessionManger.startBackgroundTask() //申请长时任务
     this.currentSong = AppStorage.get('currentSong')!   //先从全局拿正在播放的currentSong
-    aVSessionManger.setAVPlayBackState(this.currentSong,AppStorage.get('currentPlayList')!)  //设置播控中心播放状态
-    if(song.id === this.currentSong.id){  //要播放的歌曲就是当前currentSong，那就继续播放
+    aVSessionManger.setAVPlayBackState(song,AppStorage.get('currentPlayList')!)  //设置播控中心播放状态
+    if(song.id === this.currentSong?.id){  //要播放的歌曲就是当前currentSong，那就继续播放
       this.audioPlayer?.play()
       this.currentSong.isPlaying = true
     }else {
@@ -112,6 +112,7 @@ export class AVPlayerManager{
     }
     this.currentSong = currentPlayList.songs[playIndex]
     this.playSong(this.currentSong)
+    // this.playSong(currentPlayList.songs[playIndex])
   }
   //下一首
   playNext(){
@@ -131,6 +132,7 @@ export class AVPlayerManager{
     }
     this.currentSong = currentPlayList.songs[playIndex]
     this.playSong(this.currentSong)
+    // this.playSong(currentPlayList.songs[playIndex])
   }
   //重置播放器
   reset(){

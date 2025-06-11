@@ -26,7 +26,6 @@ export default class EntryAbility extends UIAbility {
         this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
         break;
     }
-    console.log('onCreate', theme)
   }
 
   onDestroy(): void {

@@ -21,7 +21,11 @@ export interface recommendSongList {
   name:string,
   picUrl:string,
   playCount:number,
-  trackCount:number
+  trackCount:number,
+  description:string,
+  tags:string[],
+  subscribedCount:number,
+  shareCount:number
 }
 //精选MV
 export interface recommendMVList {

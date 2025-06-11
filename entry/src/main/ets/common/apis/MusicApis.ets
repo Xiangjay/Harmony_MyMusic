@@ -1,10 +1,10 @@
 import {myHttp} from '../http/Http'
 //通过歌单id获取歌单详细信息
-// export function getSongListDetailById<T,K>(id:number){
-//   return myHttp<T,K>(`/playlist/detail?id=${id}`)
-// }
-//通过歌单id获取歌单详细信息
 export function getSongListDetailById<T,K>(id:number){
+  return myHttp<T,K>(`/playlist/detail?id=${id}`)
+}
+//通过歌单id获取歌单里所有歌曲详细信息
+export function getSongListSongsById<T,K>(id:number){
   return myHttp<T,K>(`/playlist/track/all?id=${id}`)
 }
 //通过歌曲id获取歌曲播放url

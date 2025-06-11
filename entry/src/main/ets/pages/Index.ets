@@ -1,16 +1,17 @@
 import { BreakPointConstants } from '../common/constants/BreakPointConstants'
 import {BasicConstants} from '../common/constants/BasicConstants'
-import { Find } from '../components/Find';
 import { Main } from '../components/Main';
 import { My } from '../components/My';
 import { Note } from '../components/Note';
 import { router } from '@kit.ArkUI';
+
 
 @Entry
 @Component
 struct Index {
   @StorageProp(BreakPointConstants.CURRENT_BREAKPOINT) currentBreakPoint:string = BreakPointConstants.BREAKPOINT_SM
   @State currentIndex: number = 0;
+  private tabController:TabsController = new TabsController()
 
   @Builder tabBarBuilder(title: string, targetIndex: number, icon: Resource) {
     Column({space:5}) {
@@ -27,6 +28,8 @@ struct Index {
         router.pushUrl({
           url:'pages/Music'
         })
+      }else {
+        this.tabController.changeIndex(targetIndex)
       }
     })
     .justifyContent(FlexAlign.Center)
@@ -34,7 +37,7 @@ struct Index {
   }
 
   build() {
-    Tabs({ barPosition: this.currentBreakPoint === BreakPointConstants.BREAKPOINT_SM || this.currentBreakPoint === BreakPointConstants.BREAKPOINT_MD ? BarPosition.End : BarPosition.Start }){
+    Tabs({controller: this.tabController, barPosition: this.currentBreakPoint === BreakPointConstants.BREAKPOINT_SM || this.currentBreakPoint === BreakPointConstants.BREAKPOINT_MD ? BarPosition.End : BarPosition.Start }){
       TabContent(){
         Main()
       }

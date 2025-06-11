@@ -26,7 +26,7 @@ export struct Main {
   }
 
   aboutToAppear(): void {
-    // this.getDefaultKeywords()
+    this.getDefaultKeywords()
     // this.tabController.preloadItems([1,2])  //预加载子节点，但是没感觉有用
   }
   //顶部搜索栏
@@ -96,7 +96,7 @@ export struct Main {
       Text(title)
         .fontSize(BasicConstants.FONT_SIZE_NORMAL)
         .fontWeight(this.currentIndex === targetIndex ? FontWeight.Bold : FontWeight.Normal)
-        .fontColor($r('app.color.top_tabBar_text'))
+        .fontColor($r('app.color.text_default'))
     }
     .justifyContent(FlexAlign.Center)
     .width('80%')
@@ -111,7 +111,6 @@ export struct Main {
       color:$r('app.color.icon_svg_selected'),
     })
   }
-
 
   build() {
     //因为有左上角的按钮，所以整个组件是一个侧边栏容器
@@ -139,12 +138,12 @@ export struct Main {
           .tabBar(this.tabBarBuilder('排行榜',2))
 
           TabContent() {
-            Empty()
+            Empty({isPage:false})
           }
           .tabBar(this.tabBarBuilder('电台',3))
 
           TabContent() {
-            Empty()
+            Empty({isPage:false})
           }
           .tabBar(this.tabBarBuilder('免费听',4))
         }
@@ -168,7 +167,5 @@ export struct Main {
     .showControlButton(false)
     .showSideBar(this.showSideBar)
     .animation({duration:500})
-    // .width(BasicConstants.FULL_WIDTH)
-    // .height(BasicConstants.FULL_HEIGHT)
   }
 }

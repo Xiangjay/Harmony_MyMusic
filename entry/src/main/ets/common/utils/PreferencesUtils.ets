@@ -34,16 +34,6 @@ export class PreferencesUtils {
       this.dataPreferences.putSync(key, value);
       this.dataPreferences.flushSync()
       console.log(`首选项数据添加成功`)
-      // if (this.dataPreferences.hasSync(key)) {
-      //   console.info(`用户首选项中${key}已存在`);
-      // } else {
-      //   // 此处以此键值对不存在时写入数据为例
-      //   this.dataPreferences.putSync(key, value);
-      //   console.log(`首选项数据添加成功`)
-      //   // 当字符串有特殊字符时，需要将字符串转为Uint8Array类型再存储
-      //   // let uInt8Array1 = new util.TextEncoder().encodeInto("~！@#￥%……&*（）——+？");
-      //   // this.dataPreferences.putSync('uInt8', uInt8Array1);
-      // }
     }
   }
   getData(key:string,value?:string){

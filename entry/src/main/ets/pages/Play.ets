@@ -5,6 +5,7 @@ import {responseSinger} from '../models/DataModel'
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { numberToTime } from '../common/utils/CommonTools'
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
+import log from '@open/log'
 
 @Entry
 @Component
@@ -16,8 +17,8 @@ struct Play {
   //播放列表弹窗用
   @State playListHeight: string = '0%'
   @State playListOpacity: number = 0
-  @State visibale:Visibility = Visibility.None  //控制播放列表的遮罩层
-  private animationDuration:number = 500
+  @State visible:Visibility = Visibility.None  //控制播放列表的遮罩层
+  private animationDuration:number = 300
 
   //通过当前歌曲的歌手Id，获取歌手图片，这里如果是合唱的话默认显示第一位歌手图片
   getSingerById = async () =>{
@@ -91,6 +92,7 @@ struct Play {
       AppStorage.setOrCreate('currentPlayList',this.currentPlayList)  //修改后要重新存到全局
     }
   }
+
   @Builder
   deleteButton(index: number) {
     Button('删除')
@@ -195,10 +197,8 @@ struct Play {
         .fillColor(Color.White)
         .width(30)
         .onClick(()=>{
-          avPlayerManager.playPrev()
-          // if(this.currentPlayList.songs.length > 1){
-          //   this.playPrev()
-          // }
+          this.playPrev()
+          // avPlayerManager.playPrev()
         })
       // 播放按钮
       Image(this.currentSong.isPlaying ? $r("app.media.icon_paused") : $r("app.media.icon_play"))
@@ -213,6 +213,7 @@ struct Play {
         .width(30)
         .onClick(()=>{
           if(this.currentPlayList.songs.length > 1){
+            // this.playNext()
             this.playNext()
           }
         })
@@ -221,8 +222,8 @@ struct Play {
         .fillColor(Color.White)
         .width(30)
         .onClick(() => {
-          this.visibale = Visibility.Visible
-          this.playListHeight = '50%'
+          this.visible = Visibility.Visible
+          this.playListHeight = '60%'
           this.playListOpacity = 1
         })
     }
@@ -252,6 +253,7 @@ struct Play {
                   .fontSize(BasicConstants.FONT_SIZE_SMALL)
               }
             }
+            .margin({left:5})
             .layoutWeight(1)
             Image($r("app.media.icon_arrow_down"))
               .fillColor('#ffa49a9a')
@@ -309,6 +311,9 @@ struct Play {
                     .alignItems(HorizontalAlign.Start)
                     .justifyContent(FlexAlign.Center)
                   }
+                  .onClick(()=>{
+                    avPlayerManager.playSong(item)
+                  })
                   .layoutWeight(1)
                   Row(){
                     Image($r('app.media.icon_add'))
@@ -324,9 +329,6 @@ struct Play {
                   right:15
                 })
                 .alignItems(VerticalAlign.Center)
-                .onClick(()=>{
-                  avPlayerManager.playSong(item)
-                })
               }
               .swipeAction({
                 end: this.deleteButton(index)
@@ -360,10 +362,10 @@ struct Play {
     .animation({
       duration:this.animationDuration,
       onFinish:()=>{
-       this.visibale = this.playListOpacity === 1 ? Visibility.Visible : Visibility.None
+       this.visible = this.playListOpacity === 1 ? Visibility.Visible : Visibility.None
       }
     })
-    .visibility(this.visibale)
+    .visibility(this.visible)
     .justifyContent(FlexAlign.End)
     .backgroundColor('#32ffffff')
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
@@ -374,8 +376,8 @@ struct Play {
       Stack({alignContent:Alignment.Top}){
         // 变色背景
         Image(this.currentSong.showPic)
-          .width('100%')
-          .height('100%')
+          .width(BasicConstants.FULL_WIDTH)
+          .height(BasicConstants.FULL_HEIGHT)
           .blur(1000)
           .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
 
@@ -406,8 +408,9 @@ struct Play {
         //返回按钮
         Row(){
           Image($r('app.media.icon_back'))
-            .width(50)
-            .height(50)
+            .width(30)
+            .height(30)
+            .fillColor(Color.White)
             .margin({left:10})
             .onClick(()=>{
               router.back()
