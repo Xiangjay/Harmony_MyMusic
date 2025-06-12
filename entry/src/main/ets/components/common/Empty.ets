@@ -1,4 +1,4 @@
-import {BasicConstants} from '../common/constants/BasicConstants'
+import {BasicConstants} from '../../common/constants/BasicConstants'
 import { router } from '@kit.ArkUI'
 
 @Component
@@ -14,7 +14,6 @@ export struct Empty {
           .height(30)
           .margin({left:10})
           .onClick(()=>{
-            console.log('111')
             router.back()
           })
           .alignRules({

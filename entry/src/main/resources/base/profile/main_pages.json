@@ -2,7 +2,7 @@
   "src": [
     "pages/Index",
     "pages/EntryPage",
-    "pages/Music",
-    "pages/Play"
+    "pages/Play",
+    "pages/Music"
   ]
 }

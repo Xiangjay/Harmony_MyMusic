@@ -1,3 +1,4 @@
+import log from '@open/log'
 //把播放量等数字转换成xx.xx万的形式
 export function countTransform(count:number,float=true):string{
   if(count.toString().length >=5){
@@ -26,7 +27,7 @@ export function numberToTime(number: number) {
   }
 }
 
-export class Opt {
+class Opt {
   yy:string = ''
   mm:string = ''
   dd:string = ''
@@ -81,3 +82,54 @@ export function formatData(timestamp:number, format:string = 'yyyy-mm-dd'){
   }
   return res
 }
+
+class A{
+  id:number = 0
+  name:string = 'aaa'
+}
+class B{
+  id:number = 1
+  name:string = 'bbb'
+  gender:string = 'male'
+}
+
+//把请求返回的数据类型转换成程序需要的数据类型
+export function myDataMerge<T>(target: Object, source: Object,specificKeys?:SpecificKey[]):T{
+  for (const key of Object.keys(target)) {
+    if(Reflect.has(source,key)){
+      Reflect.set(target,key,Reflect.get(source, key))
+    }
+  }
+  //用于数据转换的时候把source里的指定key的值赋值到target里特定的key
+  if(specificKeys && specificKeys.length > 0){
+    specificKeys.forEach((specific:SpecificKey)=>{
+      if(Reflect.has(target,specific.specificKey) && Reflect.has(source,specific.sourceKey)){
+        Reflect.set(target,specific.specificKey,Reflect.get(source, specific.sourceKey))
+      }
+    })
+  }
+  return target as T;
+}
+//用于数据转换的时候把source里的指定key的值赋值到target里特定的key
+export interface SpecificKey{
+  specificKey:string
+  sourceKey:string
+}
+// export function myDataMergeV2<T>(target: Object, source: Object,specificKeys?:Specific[]):T{
+//   for (const key of Object.keys(target)) {
+//     const realKey = key.split('__ob_')[1]
+//     if(Reflect.has(source,realKey)){
+//       Reflect.set(target,key,Reflect.get(source, realKey))
+//     }
+//   }
+//   //用于数据转换的时候把source里的指定key的值赋值到target里特定的key
+//   if(specificKeys && specificKeys.length > 0){
+//     specificKeys.forEach((specific:Specific)=>{
+//       const realKey = specific.specificKey.split('__ob_')[1]
+//       if(Reflect.has(target,specific.specificKey) && Reflect.has(source,realKey)){
+//         Reflect.set(target,specific.specificKey,Reflect.get(source, realKey))
+//       }
+//     })
+//   }
+//   return target as T;
+// }

@@ -1,33 +1,44 @@
 import { getTopArtistList } from "../../common/apis/HomeApis"
 import { BasicConstants } from "../../common/constants/BasicConstants"
-import { countTransform } from "../../common/utils/CommonTools"
-import { areaTopArtists, topArtist, topArtistsList } from "../../models/DataModel"
+import { countTransform, myDataMerge } from "../../common/utils/CommonTools"
+import { areaTopArtists, topArtistsList } from "../../../../backup/DataModel"
 import {Title} from '../common/Title'
+import {topArtists} from '../../models/DataModels'
+import { Loading } from "../common/Loading"
 
 @Component
 export struct Rank {
-  @State chinaTopArtists:Array<topArtist> = []
-  @State europeTopArtists:Array<topArtist> = []
-  @State japanTopArtists:Array<topArtist> = []
+  @State chinaTopArtists:Array<topArtists> = []
+  @State europeTopArtists:Array<topArtists> = []
+  @State japanTopArtists:Array<topArtists> = []
   @State topArtistsArea: Array<areaTopArtists> = []
+  @State isLoading:boolean = true
 
   //获取歌手排行榜
   getTopArtistsList = async () =>{
-    const chinaTopArtists = await getTopArtistList<topArtistsList,null>(1)
+    const chinaTopArtists = await getTopArtistList<topArtistsList,null>()
     //默认展示前五名数据
-    this.chinaTopArtists = chinaTopArtists.list.artists.slice(0,5)
+    chinaTopArtists.list.artists.slice(0,5).forEach(item=>{
+      this.chinaTopArtists.push(myDataMerge<topArtists>(new topArtists(),item))
+    })
     const europeTopArtists = await getTopArtistList<topArtistsList,null>(2)
-    this.europeTopArtists = europeTopArtists.list.artists.slice(0,5)
+    europeTopArtists.list.artists.slice(0,5).forEach(item=>{
+      this.europeTopArtists.push(myDataMerge<topArtists>(new topArtists(),item))
+    })
     this.topArtistsArea.push({area:'华语榜',artists:this.chinaTopArtists})
     this.topArtistsArea.push({area:'欧美榜',artists:this.europeTopArtists})
     //由于日本和韩国的接口是分开的，而我这里想合到一起，所以用promise.all一起获取数据
     const responseResult = await Promise.all([getTopArtistList<topArtistsList,null>(3),getTopArtistList<topArtistsList,null>(4)])
     //合并数据并
-    this.japanTopArtists = responseResult[0].list.artists.concat(responseResult[1].list.artists)
-    this.japanTopArtists.sort((a,b)=>{
+    const japanTopArtists = responseResult[0].list.artists.concat(responseResult[1].list.artists)
+    japanTopArtists.sort((a,b)=>{
       return b.score - a.score
     })
-    this.topArtistsArea.push({area:'日韩榜',artists:this.japanTopArtists.slice(0,5)})
+    japanTopArtists.slice(0,5).forEach(item=>{
+      this.japanTopArtists.push(myDataMerge<topArtists>(new topArtists(),item))
+    })
+    this.topArtistsArea.push({area:'日韩榜',artists:this.japanTopArtists})
+    this.isLoading = false
   }
 
   @Builder topArtistsListBuilder(){
@@ -45,7 +56,7 @@ export struct Rank {
                 .textAlign(TextAlign.Start)
                 .fontColor($r('app.color.text_default'))
               List({space:10}){
-                ForEach(item.artists,(artist:topArtist)=>{
+                ForEach(item.artists,(artist:topArtists)=>{
                   ListItem(){
                     Flex(){
                       //歌手图片
@@ -88,7 +99,7 @@ export struct Rank {
                     .height(80)
                     .width(BasicConstants.FULL_WIDTH)
                   }
-                },(artist:topArtist)=>artist.id.toString())
+                },(artist:topArtists)=>artist.id.toString())
               }
               .scrollBar(BarState.Off)
               .edgeEffect(EdgeEffect.None)
@@ -130,16 +141,20 @@ export struct Rank {
   }
 
   build() {
-    Scroll(){
-      Column({space:20}){
-        //歌手排行榜
-        this.topArtistsListBuilder()
+    if(!this.isLoading){
+      Scroll(){
+        Column({space:20}){
+          //歌手排行榜
+          this.topArtistsListBuilder()
+        }
       }
+      .margin({bottom:60})
+      .width(BasicConstants.FULL_WIDTH)
+      .padding({
+        left:10
+      })
+    }else{
+      Loading()
     }
-    .margin({bottom:60})
-    .width(BasicConstants.FULL_WIDTH)
-    .padding({
-      left:10
-    })
   }
 }

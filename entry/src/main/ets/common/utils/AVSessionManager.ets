@@ -1,7 +1,7 @@
 import { avSession } from '@kit.AVSessionKit'
 import backgroundTaskManager from '@ohos.resourceschedule.backgroundTaskManager'
 import { wantAgent } from '@kit.AbilityKit';
-import { playListModel, songModel,playMode } from '../../models/DataModel';
+import { playListModel, songModel,playMode } from '../../../../backup/DataModel';
 import { avPlayerManager } from './AVPlayerManager';
 
 class AVSessionManger{

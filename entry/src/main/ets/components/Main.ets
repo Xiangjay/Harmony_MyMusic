@@ -1,9 +1,9 @@
 import { BasicConstants } from '../common/constants/BasicConstants'
 import {SideBar} from './SideBar'
 import {getDefaultKeywords} from '../common/apis/HomeApis'
-import {SearchKeyWordInterface} from '../models/DataModel'
+import {SearchKeyWordInterface} from '../models/DataModels'
 import { Recommend } from './Main/Recommend'
-import { Empty } from './Empty'
+import { Empty } from './common/Empty'
 import { Newest } from './Main/Newest'
 import { Rank } from './Main/Rank'
 

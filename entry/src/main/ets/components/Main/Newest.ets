@@ -1,27 +1,39 @@
 import { getMusicBanner, getNewestAlbumsList, getNewestMVList } from '../../common/apis/HomeApis'
 import { BasicConstants } from '../../common/constants/BasicConstants'
-import { banner, newestAlbum, newestMV } from "../../models/DataModel"
 import {Title} from '../common/Title'
+import {banner,newestAlbum,newestMV} from '../../models/DataModels'
+import { myDataMerge } from '../../common/utils/CommonTools'
+import { Loading } from '../common/Loading'
 
 @Component
 export struct Newest {
   @State banners:Array<banner> = []
   @State newestAlbumsList:Array<newestAlbum> = []
   @State newestMVList:Array<newestMV> = []
+  @State isLoading:boolean = true
+
   getBanner = async () => {
     const res = await getMusicBanner<Array<banner>,null>()
     this.banners = res.banners
+    this.isLoading = false
   }
   //获取最新专辑
   getNewestAlbumsList = async () =>{
     const res = await getNewestAlbumsList<Array<newestAlbum>,null>()
-    this.newestAlbumsList = res.albums
+    res.albums.forEach(item=>{
+      this.newestAlbumsList.push(myDataMerge<newestAlbum>(new newestAlbum(),item))
+    })
+    this.isLoading = false
   }
   //获取最新MV
   getNewestMVList = async () =>{
     const res = await getNewestMVList<Array<newestMV>,null>()
-    this.newestMVList = res.data
+    res.data.forEach(item=>{
+      this.newestMVList.push(myDataMerge<newestMV>(new newestMV(),item))
+    })
+    this.isLoading = false
   }
+
   aboutToAppear(): void {
     this.getBanner()
     this.getNewestAlbumsList()
@@ -159,21 +171,26 @@ export struct Newest {
     .padding({right:10})
     .margin({bottom:20})
   }
+
   build() {
-    Scroll(){
-      Column({space:20}){
-        //banner区域
-        this.swiperBuilder()
-        //最新专辑区域
-        this.newestAlbumsBuilder()
-        //最新MV区域
-        this.newestMVBuilder()
+    if(!this.isLoading){
+      Scroll(){
+        Column({space:20}){
+          //banner区域
+          this.swiperBuilder()
+          //最新专辑区域
+          this.newestAlbumsBuilder()
+          //最新MV区域
+          this.newestMVBuilder()
+        }
       }
+      .margin({bottom:60})
+      .width(BasicConstants.FULL_WIDTH)
+      .padding({
+        left:10
+      })
+    }else {
+      Loading()
     }
-    .margin({bottom:60})
-    .width(BasicConstants.FULL_WIDTH)
-    .padding({
-      left:10
-    })
   }
 }

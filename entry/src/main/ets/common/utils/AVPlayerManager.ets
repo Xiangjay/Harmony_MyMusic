@@ -1,5 +1,5 @@
 import { media } from "@kit.MediaKit";
-import { playListModel, songModel,playMode} from '../../models/DataModel'
+import { playListModel, songModel,playMode} from '../../../../backup/DataModel'
 import { aVSessionManger } from "./AVSessionManager";
 import log from '@open/log'
 

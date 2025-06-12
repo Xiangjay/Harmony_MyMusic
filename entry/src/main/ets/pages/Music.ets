@@ -1,24 +1,15 @@
 import { router } from "@kit.ArkUI";
 import { BasicConstants } from '../common/constants/BasicConstants'
 import {
-  songModel,
-  responseSongList,
-  routerParamsType,
-  responseSongUrl,
-  playListModel,
-  recommendSongList,
-  artist,
-  songDetail
-} from "../models/DataModel";
-import {
   getSongListSongsById,
   getSongUrlByIds,
-  getSongDetailByIds,
   getSongListDetailById
 } from '../common/apis/MusicApis'
-import { Empty } from "../components/Empty";
+import { Empty } from "../components/common/Empty";
 import log from '@open/log'
-import { countTransform } from "../common/utils/CommonTools";
+import { countTransform,myDataMerge, SpecificKey} from "../common/utils/CommonTools";
+import {routerParamsType,PlayListModel,SongModel} from '../models/DataModels'
+import { Loading } from "../components/common/Loading";
 
 @Extend(Text) function coverText(fontSize:number) {
   .fontSize(fontSize)
@@ -27,80 +18,74 @@ import { countTransform } from "../common/utils/CommonTools";
   .maxLines(2)
   .textOverflow({ overflow: TextOverflow.Ellipsis })
 }
-
 @Entry
 @Component
 struct Music {
   private params = router.getParams()
+  @State playListId:number = 0
   @State noList: boolean = false
-  @State songList: recommendSongList | null = null
-  @State playList: playListModel = new playListModel() //程序需要的数据类型
+  @State playList: PlayListModel = new PlayListModel() //程序需要的数据类型
   @State isLoading: boolean = true
   //播放列表弹窗用
   @State songListHeight: string = '0%'
   @State songListOpacity: number = 0
   private animationDuration:number = 300
-  @StorageLink('currentSong') currentSong: songModel = new songModel()
+  @StorageLink('currentSong') currentSong: SongModel = new SongModel()
   //通过传过来的歌单ID获取歌单里所有歌曲
   getSongListDetail = async () => {
     //获取歌单详细信息
-    const responseSongList = await getSongListDetailById<recommendSongList, null>(this.playList.id)
-    //本页面需要渲染的数据
-    this.songList!.description = responseSongList.playlist.description
-    this.songList!.tags = responseSongList.playlist.tags
-    this.songList!.subscribedCount = responseSongList.playlist.subscribedCount
-    this.songList!.shareCount = responseSongList.playlist.shareCount
-    this.songList!.trackCount = responseSongList.playlist.trackCount
-
-    //获取歌单里所有歌曲
-    const responseSongListSongs = await getSongListSongsById<Array<responseSongList>, null>(this.playList.id)
+    const responsePlayList = await getSongListDetailById<PlayListModel, null>(this.playListId)
+    const playListSpecificKeys:SpecificKey[] = [
+      {
+        specificKey:'picUrl',
+        sourceKey:'coverImgUrl'
+      }
+    ]
+    this.playList = myDataMerge<PlayListModel>(this.playList,responsePlayList.playlist,playListSpecificKeys)
+    //获取歌单里所有歌曲，这里只能拿到歌曲的ID、名字、作者、专辑
+    const responseSongListSongs = await getSongListSongsById<Array<SongModel>, null>(this.playListId)
     //拿到歌单里所有歌曲的ID
     let songIds: number[] = []
-    responseSongListSongs.songs.forEach((item: responseSongList) => {
+    //用于数据转换的时候把source里的指定key的值赋值到target里特定的key
+    const songSpecificKeys:SpecificKey[] = [
+      {
+        specificKey:'artists',
+        sourceKey:'ar'
+      },
+      {
+        specificKey:'album',
+        sourceKey:'al'
+      },
+      {
+        specificKey:'duration',
+        sourceKey:'dt'
+      }
+    ]
+    //处理下拿到的歌曲的数据格式
+    this.playList.songs = []  //这里需要让歌单里的歌曲变化地址，不然监测不到变化页面不会重新渲染，如果弹窗的list是子组件，那应该可以用@Observed和@ObjectLink
+    responseSongListSongs.songs.forEach((item: SongModel) => {
+      this.playList.songs.push(myDataMerge<SongModel>(new SongModel(),item,songSpecificKeys))
+      //保存所有歌曲ID，用于后续获取歌曲URL
       songIds.push(item.id)
     })
-    //通过歌曲ID获取歌曲播放URL
-    const responseSongUrls = await getSongUrlByIds<Array<responseSongUrl>, null>(songIds)
-    //把从后端拿到的数据处理成页面需要的数据类型playListModelTest
-    this.playList.songs = []
-    responseSongListSongs.songs.forEach((item: responseSongList) => {
-      //处理歌手信息，用于页面展示
-      const artists: string[] = []
-      if (item.ar.length > 1) {
-        item.ar.forEach((ar: artist) => {
-          artists.push(ar.name)
+    //处理歌曲图片和歌手名字
+    this.playList.songs.forEach((song:SongModel)=>{
+      song.showPic = song.album.picUrl
+      if(song.artists.length > 1){
+        song.artists.forEach(item=>{
+          song.showArtists.push(item.name)
         })
-      } else {
-        artists.push(item.ar[0].name)
+      }else{
+        song.showArtists.push(song.artists[0].name)
       }
-      //整理歌曲数据
-      const song: songModel = {
-        id: item.id,
-        name: item.name,
-        artists: item.ar,
-        album: item.al,
-        showArtists: artists,
-        isPlaying: true,
-        time: 0,
-        duration: 0,
-        url: '', //这里面拿不到url，所以先设置为空
-      }
-      this.playList.songs.push(song)
     })
-    responseSongUrls.data.forEach(item => { //这有URL了，通过歌曲Id把对应的URL赋值进去
-      this.playList.songs.forEach(song => {
-        if (song.id === item.id) {
+    //通过歌曲ID获取歌曲播放URL
+    const responseSongUrls = await getSongUrlByIds<Array<SongModel>, null>(songIds)
+    //把拿到的歌曲url赋值到对应的歌曲里，这里其实可以一个循环this.playList.songs[index].url = item.url就行，但是为了以防万一顺序错乱，还是严谨点用两个循环判断下ID
+    responseSongUrls.data.forEach(item=>{
+      this.playList.songs.forEach((song:SongModel)=>{
+        if(item.id === song.id){
           song.url = item.url
-        }
-      })
-    })
-    //获取歌曲详细信息
-    const responseSongDetail = await getSongDetailByIds<Array<songDetail>, null>(songIds)
-    responseSongDetail.songs.forEach((item: songDetail) => {
-      this.playList.songs.forEach(song => {
-        if (song.id === item.id) {
-          song.duration = item.dt //获取歌曲总时长
-          song.showPic = item.al?.picUrl //获取歌曲专辑封面图片
         }
       })
     })
@@ -109,52 +94,38 @@ struct Music {
       this.songListHeight = '60%'
       this.songListOpacity = 1
     }
+    log.info(this.playList)
   }
-  addList2ToLocalPlayList = ()=>{
+  addList2ToLocal = ()=>{
 
   }
-  addSong2LocalPlayList = ()=>{
+  addSong2Local = ()=>{
 
   }
   aboutToAppear(): void {
     try {
-      this.songList = (this.params as routerParamsType<recommendSongList>).value
-      this.playList.id = this.songList.id
-      this.playList.name = this.songList.name
+      this.playListId = (this.params as routerParamsType<number>).value
       this.getSongListDetail()
     } catch {
       this.noList = true
     }
   }
 
-  @Builder loadingBuilder() {
-    Row() {
-      Image($r('app.media.loading'))
-        .width(50)
-      Text('努力加载中......')
-        .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-        .fontColor('#91ee91')
-        .margin({ right: 10 })
-    }
-    .clip(true)
-    .borderRadius(5)
-    .backgroundColor('#ffffff')
-  }
   @Builder coverBuilder() {
     Row() {
       Column() {
-        Image(this.songList?.picUrl)
+        Image(this.playList.picUrl)
           .borderRadius(5)
           .width(BasicConstants.FULL_WIDTH)
       }
       .width(120)
       Column() {
-        Text(this.songList?.name)
+        Text(this.playList.name)
           .coverText(BasicConstants.FONT_SIZE_LARGE)
-        Text(this.songList?.tags.toString())
+        Text(this.playList.tags.toString())
           .coverText(BasicConstants.FONT_SIZE_SMALL)
           .opacity(0.6)
-        Text(this.songList?.description)
+        Text(this.playList!.description)
           .coverText(BasicConstants.FONT_SIZE_NORMAL)
           .opacity(0.8)
       }
@@ -187,7 +158,7 @@ struct Music {
         Row(){
           Image($r('app.media.icon_share'))
             .width(20)
-          Text(countTransform(this.songList!.shareCount,false))
+          Text(countTransform(this.playList.shareCount,false))
             .fontColor('#ffffff')
             .margin({left:5})
         }
@@ -198,7 +169,7 @@ struct Music {
         Row(){
           Image($r('app.media.icon_comment'))
             .width(20)
-          Text(countTransform(this.songList!.subscribedCount,false))
+          Text(countTransform(this.playList!.subscribedCount,false))
             .fontColor('#ffffff')
             .margin({left:5})
         }
@@ -209,7 +180,7 @@ struct Music {
         Row(){
           Image($r('app.media.icon_add_track'))
             .width(20)
-          Text(countTransform(this.songList!.trackCount,false))
+          Text(countTransform(this.playList.trackCount,false))
             .fontColor('#ffffff')
             .margin({left:5})
         }
@@ -234,7 +205,7 @@ struct Music {
             Span('播放列表 ')
               .fontColor($r('app.color.text_default'))
               .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-            Span(`(${this.playList.songs.length})`)
+            Span(`(${this.playList?.songs?.length})`)
               .fontColor('#ffa49a9a')
               .fontSize(BasicConstants.FONT_SIZE_SMALL)
           }
@@ -247,7 +218,7 @@ struct Music {
           .width(25)
           .height(25)
           .onClick(()=>{
-            this.addList2ToLocalPlayList()
+            this.addList2ToLocal()
           })
       }
       .padding({
@@ -267,7 +238,7 @@ struct Music {
       })
       // 播放列表
       List() {
-        ForEach(this.playList.songs, (item: songModel, index: number) => {
+        ForEach(this.playList?.songs, (item: SongModel, index: number) => {
           ListItem() {
             Row({space:10}) {
               Row(){
@@ -314,7 +285,7 @@ struct Music {
                   .height(20)
                   .fillColor($r('app.color.icon_svg_selected'))
                   .onClick(()=>{
-                    this.addSong2LocalPlayList()
+                    this.addSong2Local()
                   })
               }
             }
@@ -351,13 +322,13 @@ struct Music {
     if (!this.noList) {
       Stack({ alignContent: Alignment.Bottom }) {
         Stack({ alignContent: this.isLoading ? Alignment.Center : Alignment.Top }) {
-          Image(this.songList?.picUrl)
+          Image(this.playList?.picUrl)
             .width(BasicConstants.FULL_WIDTH)
             .height(BasicConstants.FULL_HEIGHT)
             .blur(1000)
             .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
           if (this.isLoading) {
-            this.loadingBuilder()
+            Loading()
           } else {
             //头部部分
             Column({ space: 10 }) {
