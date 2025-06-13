@@ -7,4 +7,8 @@ export class BasicConstants{
   static readonly FONT_SIZE_LARGE:number = 18
   static readonly FONT_SIZE_XLARGE:number = 30
   static readonly BASE_URL:string = 'http://localhost:3000'
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d7032f99345f905d4ac852a0b0dd123bf3d0f310
