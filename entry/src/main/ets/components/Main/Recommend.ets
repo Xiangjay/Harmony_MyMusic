@@ -205,7 +205,7 @@ export struct Recommend {
                 .width('100%')
                 .maxLines(2)
                 .textOverflow({overflow:TextOverflow.Ellipsis})
-                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                .fontSize(BasicConstants.FONT_SIZE_SMALL)
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
                 .borderRadius(5)

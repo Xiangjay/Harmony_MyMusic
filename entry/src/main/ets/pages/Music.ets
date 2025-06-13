@@ -1,40 +1,44 @@
-import { router } from "@kit.ArkUI";
+import { PromptAction, router } from "@kit.ArkUI";
 import { BasicConstants } from '../common/constants/BasicConstants'
 import {
   getSongListSongsById,
   getSongUrlByIds,
   getSongListDetailById,
-  getAlbumDetailById
+  getAlbumDetailById,
+  getAlbumDynamicById
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
-import log from '@open/log'
-import { countTransform, formatData,myDataMerge, numberToTime, SpecificKey} from "../common/utils/CommonTools";
+import { countTransform, formatData, myDataMerge, SpecificKey} from "../common/utils/CommonTools";
 import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType,
-  AlbumDetail,
-  newestAlbum} from '../models/DataModels'
+  newestAlbum,AlbumDynamic,
+  commentsRouterParamsModel} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 
-@Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL,maxLines:number = 2) {
+
+@Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
   .fontSize(fontSize)
   .fontColor(Color.White)
   .width(BasicConstants.FULL_WIDTH)
-  .maxLines(maxLines)
+  .maxLines(2)
   .textOverflow({ overflow: TextOverflow.Ellipsis })
 }
+
 @Entry
 @Component
 struct Music {
-  private params = router.getParams()
   @State routerParams:musicRouterParamsModel = new musicRouterParamsModel()
   @State noList: boolean = false
   @State playList: PlayListModel = new PlayListModel() //程序需要的数据类型
-  @State playListType:playListType = playListType.playList
+  @State playListType:playListType = playListType.playList  //歌单或者专辑
   @State isLoading: boolean = true
   //播放列表弹窗用
   @State songListHeight: string = '0%'
   @State songListOpacity: number = 0
   private animationDuration:number = 300
-  @StorageLink('currentSong') currentSong: SongModel = new SongModel()
+  @StorageLink('currentSong') currentSong: SongModel = new SongModel()  //当前正在播放的歌曲
+  private uiContext: UIContext = this.getUIContext();
+  private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
+
   //通过传过来的歌单ID获取歌单里所有歌曲
   getPlayListDetail = async (id:number) => {
     //获取歌单详细信息
@@ -98,9 +102,8 @@ struct Music {
       this.songListHeight = '65%'
       this.songListOpacity = 1
     }
-    log.info(this.playList)
   }
-
+  //通过传过来的专辑ID获取专辑详细
   getAlbumDetail = async (id:number) =>{
     //先拿专辑基本信息
     const resAlbum = await getAlbumDetailById<newestAlbum,null>(id)
@@ -109,6 +112,9 @@ struct Music {
     if(this.playList.description.indexOf('\n') > -1){
       this.playList.description = this.playList.description.replaceAll('\n','')
     }
+    //获取专辑动态信息（评论数，分享数）
+    const resDynamic = await getAlbumDynamicById<AlbumDynamic,null>(id)
+    this.playList = myDataMerge<PlayListModel>(this.playList,resDynamic)
     //再拿专辑里的歌曲
     const resSongs = await getAlbumDetailById<Array<SongModel>,null>(id)
     const songIds:number[] = []
@@ -137,10 +143,9 @@ struct Music {
     })
     this.isLoading = false
     if(!this.isLoading){
-      this.songListHeight = '60%'
+      this.songListHeight = '65%'
       this.songListOpacity = 1
     }
-    log.info(this.playList)
   }
 
   addList2ToLocal = ()=>{
@@ -149,9 +154,30 @@ struct Music {
   addSong2Local = ()=>{
 
   }
+  goToComments = () =>{
+    if (this.playList.commentCount != 0) {
+      const param:commentsRouterParamsModel = {
+        id:this.playList.id,
+        type: this.playListType,
+        detail:this.playList
+      }
+      router.pushUrl({
+        url:'pages/Comments',
+        params: {
+          param: param
+        }
+      })
+    }else {
+      this.promptAction.showToast({
+        message: '暂无评论',
+        duration: 2000
+      })
+    }
+  }
+
   aboutToAppear(): void {
     try {
-      this.routerParams = (this.params as routerParams<musicRouterParamsModel>).param
+      this.routerParams = (router.getParams() as routerParams<musicRouterParamsModel>).param
       this.playListType = this.routerParams.type
       if(this.playListType === playListType.playList){
         this.getPlayListDetail(this.routerParams.id)
@@ -175,24 +201,15 @@ struct Music {
       Column() {
         Text(this.playList.name)
           .coverText(BasicConstants.FONT_SIZE_LARGE)
-        if(this.playListType === playListType.playList){
-          Text(this.playList.tags!.toString())
-            .coverText(BasicConstants.FONT_SIZE_SMALL)
-            .opacity(0.6)
-          Text(this.playList.description)
-            .coverText()
-            .opacity(0.8)
-        }else {
-          Text(this.playList.artist?.name)
-            .coverText()
-          Text(formatData(this.playList.publishTime!) + ' 发行')
-            .coverText(BasicConstants.FONT_SIZE_SMALL)
-            .opacity(0.6)
-        }
+        Text(this.playList.tags!.toString() || formatData(this.playList.publishTime!) + ' 发行')
+          .coverText(BasicConstants.FONT_SIZE_SMALL)
+          .opacity(0.6)
+        Text(this.playList.description)
+          .coverText()
+          .opacity(0.8)
       }
       .padding({
         left: 10,
-        right: 10,
         top: 5,
         bottom: 5
       })
@@ -214,49 +231,47 @@ struct Music {
     })
   }
   @Builder coverButtonsBuilder() {
-    Row(){
-      if(this.playListType === playListType.playList) {
-        Button(){
-          Row(){
-            Image($r('app.media.icon_share'))
-              .width(20)
-            Text(countTransform(this.playList.shareCount,false))
-              .fontColor('#ffffff')
-              .margin({left:5})
-          }
-          .justifyContent(FlexAlign.Center)
+    Row({space:30}){
+      Button(){
+        Row(){
+          Image($r('app.media.icon_share'))
+            .width(20)
+          Text(this.playList.shareCount != 0 ? countTransform(this.playList.shareCount,false) : '分享')
+            .fontColor('#ffffff')
+            .margin({left:5})
         }
-        .coverButtons()
-        Button(){
-          Row(){
-            Image($r('app.media.icon_comment'))
-              .width(20)
-            Text(countTransform(this.playList!.subscribedCount,false))
-              .fontColor('#ffffff')
-              .margin({left:5})
-          }
-          .justifyContent(FlexAlign.Center)
-        }
-        .coverButtons()
-        Button(){
-          Row(){
-            Image($r('app.media.icon_add_track'))
-              .width(20)
-            Text(countTransform(this.playList.trackCount,false))
-              .fontColor('#ffffff')
-              .margin({left:5})
-          }
-          .justifyContent(FlexAlign.Center)
-        }
-        .coverButtons()
-      }else {
-        Text(this.playList.description)
-          .coverText(BasicConstants.FONT_SIZE_NORMAL,4)
+        .justifyContent(FlexAlign.Center)
       }
+      .coverButtons()
+      Button(){
+        Row(){
+          Image($r('app.media.icon_comment'))
+            .width(20)
+          Text(this.playList.commentCount != 0 ? countTransform(this.playList!.commentCount,false) : '评论')
+            .fontColor('#ffffff')
+            .margin({left:5})
+        }
+        .justifyContent(FlexAlign.Center)
+      }
+      .coverButtons()
+      .onClick(()=>{
+        this.goToComments()
+      })
+      // Button(){
+      //   Row(){
+      //     Image($r('app.media.icon_add_track'))
+      //       .width(20)
+      //     Text(this.playList.trackCount != 0 ? countTransform(this.playList.trackCount,false) : '收藏')
+      //       .fontColor('#ffffff')
+      //       .margin({left:5})
+      //   }
+      //   .justifyContent(FlexAlign.Center)
+      // }
+      // .coverButtons()
     }
     .margin({top:10})
     .width(BasicConstants.FULL_WIDTH)
-    .justifyContent(this.playListType === playListType.playList?FlexAlign.SpaceBetween:FlexAlign.Start)
+    .justifyContent(FlexAlign.Center)
     .alignItems(VerticalAlign.Center)
   }
   @Builder songListBuilder(){
@@ -367,7 +382,7 @@ struct Music {
             width: { bottom: 1 },
             color: '#12ec5c87'
           })
-        })
+        },(item:SongModel)=>item.id.toString())
       }
       .edgeEffect(EdgeEffect.None)
       .fadingEdge(true)

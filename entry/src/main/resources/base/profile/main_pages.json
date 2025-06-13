@@ -3,6 +3,7 @@
     "pages/Index",
     "pages/EntryPage",
     "pages/Play",
-    "pages/Music"
+    "pages/Music",
+    "pages/Comments"
   ]
 }

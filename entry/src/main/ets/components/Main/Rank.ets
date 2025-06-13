@@ -3,14 +3,14 @@ import { BasicConstants } from "../../common/constants/BasicConstants"
 import { countTransform, myDataMerge } from "../../common/utils/CommonTools"
 import { areaTopArtists, topArtistsList } from "../../../../backup/DataModel"
 import {Title} from '../common/Title'
-import {topArtists} from '../../models/DataModels'
+import {topArtistsModel} from '../../models/DataModels'
 import { Loading } from "../common/Loading"
 
 @Component
 export struct Rank {
-  @State chinaTopArtists:Array<topArtists> = []
-  @State europeTopArtists:Array<topArtists> = []
-  @State japanTopArtists:Array<topArtists> = []
+  @State chinaTopArtists:Array<topArtistsModel> = []
+  @State europeTopArtists:Array<topArtistsModel> = []
+  @State japanTopArtists:Array<topArtistsModel> = []
   @State topArtistsArea: Array<areaTopArtists> = []
   @State isLoading:boolean = true
 
@@ -19,11 +19,11 @@ export struct Rank {
     const chinaTopArtists = await getTopArtistList<topArtistsList,null>()
     //默认展示前五名数据
     chinaTopArtists.list.artists.slice(0,5).forEach(item=>{
-      this.chinaTopArtists.push(myDataMerge<topArtists>(new topArtists(),item))
+      this.chinaTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     const europeTopArtists = await getTopArtistList<topArtistsList,null>(2)
     europeTopArtists.list.artists.slice(0,5).forEach(item=>{
-      this.europeTopArtists.push(myDataMerge<topArtists>(new topArtists(),item))
+      this.europeTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     this.topArtistsArea.push({area:'华语榜',artists:this.chinaTopArtists})
     this.topArtistsArea.push({area:'欧美榜',artists:this.europeTopArtists})
@@ -35,7 +35,7 @@ export struct Rank {
       return b.score - a.score
     })
     japanTopArtists.slice(0,5).forEach(item=>{
-      this.japanTopArtists.push(myDataMerge<topArtists>(new topArtists(),item))
+      this.japanTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     this.topArtistsArea.push({area:'日韩榜',artists:this.japanTopArtists})
     this.isLoading = false
@@ -56,7 +56,7 @@ export struct Rank {
                 .textAlign(TextAlign.Start)
                 .fontColor($r('app.color.text_default'))
               List({space:10}){
-                ForEach(item.artists,(artist:topArtists)=>{
+                ForEach(item.artists,(artist:topArtistsModel)=>{
                   ListItem(){
                     Flex(){
                       //歌手图片
@@ -99,7 +99,7 @@ export struct Rank {
                     .height(80)
                     .width(BasicConstants.FULL_WIDTH)
                   }
-                },(artist:topArtists)=>artist.id.toString())
+                },(artist:topArtistsModel)=>artist.id.toString())
               }
               .scrollBar(BarState.Off)
               .edgeEffect(EdgeEffect.None)

@@ -19,7 +19,15 @@ export function getSongDetailByIds<T,K>(songIds:number[]){
 export function getSingerDetailById<T,K>(singerId:number){
   return myHttp<T,K>(`/artist/detail?id=${singerId}`)
 }
-//通过歌手id获取歌手详细信息
+//通过专辑id获取专辑详细信息
 export function getAlbumDetailById<T,K>(albumId:number){
   return myHttp<T,K>(`/album?id=${albumId}`)
+}
+//通过专辑id获取专辑动态信息
+export function getAlbumDynamicById<T,K>(albumId:number){
+  return myHttp<T,K>(`/album/detail/dynamic?id=${albumId}`)
+}
+//通过歌单或专辑id获取评论
+export function getCommentsById<T,K>(type:string,id:number){
+  return myHttp<T,K>(`/comment/${type}?id=${id}`)
 }

@@ -9,6 +9,11 @@ export class musicRouterParamsModel{
   id:number = 0
   type:playListType = playListType.playList
 }
+export class commentsRouterParamsModel{
+  id:number = 0
+  type:playListType = playListType.playList
+  detail:PlayListModel = new PlayListModel()
+}
 export enum playListType{
   playList = 0,
   album = 1,
@@ -26,7 +31,7 @@ export class PlayListModel{
   trackCount:number = 0
   description:string = ''
   tags?:string[] = []
-  subscribedCount:number = 0
+  commentCount:number = 0
   shareCount:number = 0
   artist?:Artist = new Artist() //专辑用
   publishTime?:number = 0 //专辑用
@@ -68,10 +73,14 @@ export class Album{
   name:string = ''
   picUrl:string = ''
 }
-export class AlbumDetail{
-  songs:Array<SongModel> = []
-  album: newestAlbum = new newestAlbum()
+
+//专辑信息，拿到专辑的分享数和评论数
+export class AlbumDynamic{
+  commentCount:number = 0
+  shareCount:number = 0
+  subCount:number = 0
 }
+
 
 /*
  * 推荐tab
@@ -130,7 +139,7 @@ export class newestMV{
  * 排行榜tab
 */
 //排行榜tab里歌手数据
-export class topArtists{
+export class topArtistsModel{
   name:string = ''
   id: number = 0
   picUrl:string = ''
@@ -139,5 +148,20 @@ export class topArtists{
   score:number = 0
 }
 export interface topArtistsList{
-  artists:Array<topArtists>
+  artists:Array<topArtistsModel>
+}
+
+//评论数据
+export class commentsModel{
+  commentId:number = 0
+  content:string = ''
+  time:number = 0
+  user:commentsUser = new commentsUser()
+  likedCount:number = 0
+}
+//评论的用户
+export class commentsUser{
+  userId:number = 0
+  nickname:string = ''
+  avatarUrl:string = ''
 }
