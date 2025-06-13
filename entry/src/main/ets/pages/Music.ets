@@ -3,28 +3,32 @@ import { BasicConstants } from '../common/constants/BasicConstants'
 import {
   getSongListSongsById,
   getSongUrlByIds,
-  getSongListDetailById
+  getSongListDetailById,
+  getAlbumDetailById
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
 import log from '@open/log'
-import { countTransform,myDataMerge, SpecificKey} from "../common/utils/CommonTools";
-import {routerParamsType,PlayListModel,SongModel} from '../models/DataModels'
+import { countTransform, formatData,myDataMerge, numberToTime, SpecificKey} from "../common/utils/CommonTools";
+import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType,
+  AlbumDetail,
+  newestAlbum} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 
-@Extend(Text) function coverText(fontSize:number) {
+@Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL,maxLines:number = 2) {
   .fontSize(fontSize)
   .fontColor(Color.White)
   .width(BasicConstants.FULL_WIDTH)
-  .maxLines(2)
+  .maxLines(maxLines)
   .textOverflow({ overflow: TextOverflow.Ellipsis })
 }
 @Entry
 @Component
 struct Music {
   private params = router.getParams()
-  @State playListId:number = 0
+  @State routerParams:musicRouterParamsModel = new musicRouterParamsModel()
   @State noList: boolean = false
   @State playList: PlayListModel = new PlayListModel() //程序需要的数据类型
+  @State playListType:playListType = playListType.playList
   @State isLoading: boolean = true
   //播放列表弹窗用
   @State songListHeight: string = '0%'
@@ -32,9 +36,9 @@ struct Music {
   private animationDuration:number = 300
   @StorageLink('currentSong') currentSong: SongModel = new SongModel()
   //通过传过来的歌单ID获取歌单里所有歌曲
-  getSongListDetail = async () => {
+  getPlayListDetail = async (id:number) => {
     //获取歌单详细信息
-    const responsePlayList = await getSongListDetailById<PlayListModel, null>(this.playListId)
+    const responsePlayList = await getSongListDetailById<PlayListModel, null>(id)
     const playListSpecificKeys:SpecificKey[] = [
       {
         specificKey:'picUrl',
@@ -43,7 +47,7 @@ struct Music {
     ]
     this.playList = myDataMerge<PlayListModel>(this.playList,responsePlayList.playlist,playListSpecificKeys)
     //获取歌单里所有歌曲，这里只能拿到歌曲的ID、名字、作者、专辑
-    const responseSongListSongs = await getSongListSongsById<Array<SongModel>, null>(this.playListId)
+    const responseSongListSongs = await getSongListSongsById<Array<SongModel>, null>(id)
     //拿到歌单里所有歌曲的ID
     let songIds: number[] = []
     //用于数据转换的时候把source里的指定key的值赋值到target里特定的key
@@ -91,11 +95,54 @@ struct Music {
     })
     this.isLoading = false
     if(!this.isLoading){
+      this.songListHeight = '65%'
+      this.songListOpacity = 1
+    }
+    log.info(this.playList)
+  }
+
+  getAlbumDetail = async (id:number) =>{
+    //先拿专辑基本信息
+    const resAlbum = await getAlbumDetailById<newestAlbum,null>(id)
+    this.playList = myDataMerge<PlayListModel>(new PlayListModel(),resAlbum.album)
+    //处理下格式，不然页面渲染不出来
+    if(this.playList.description.indexOf('\n') > -1){
+      this.playList.description = this.playList.description.replaceAll('\n','')
+    }
+    //再拿专辑里的歌曲
+    const resSongs = await getAlbumDetailById<Array<SongModel>,null>(id)
+    const songIds:number[] = []
+    this.playList.songs = []
+    const specificKeys:SpecificKey[] = [
+      {
+        specificKey:'duration',
+        sourceKey:'dt'
+      }
+    ]
+    resSongs.songs.forEach((item: SongModel) => {
+      this.playList.songs.push(myDataMerge<SongModel>(new SongModel(),item,specificKeys))
+      //保存所有歌曲ID，用于后续获取歌曲URL
+      songIds.push(item.id)
+    })
+    //通过歌曲ID获取歌曲播放URL
+    const responseSongUrls = await getSongUrlByIds<Array<SongModel>, null>(songIds)
+    //把拿到的歌曲url赋值到对应的歌曲里
+    responseSongUrls.data.forEach(item=>{
+      this.playList.songs.forEach((song:SongModel)=>{
+        if(item.id === song.id){
+          song.url = item.url
+          song.showPic = this.playList.picUrl //把专辑封面当做歌曲图片放进去
+        }
+      })
+    })
+    this.isLoading = false
+    if(!this.isLoading){
       this.songListHeight = '60%'
       this.songListOpacity = 1
     }
     log.info(this.playList)
   }
+
   addList2ToLocal = ()=>{
 
   }
@@ -104,8 +151,13 @@ struct Music {
   }
   aboutToAppear(): void {
     try {
-      this.playListId = (this.params as routerParamsType<number>).value
-      this.getSongListDetail()
+      this.routerParams = (this.params as routerParams<musicRouterParamsModel>).param
+      this.playListType = this.routerParams.type
+      if(this.playListType === playListType.playList){
+        this.getPlayListDetail(this.routerParams.id)
+      }else if(this.playListType === playListType.album){
+        this.getAlbumDetail(this.routerParams.id)
+      }
     } catch {
       this.noList = true
     }
@@ -117,17 +169,26 @@ struct Music {
         Image(this.playList.picUrl)
           .borderRadius(5)
           .width(BasicConstants.FULL_WIDTH)
+          .height(120)
       }
       .width(120)
       Column() {
         Text(this.playList.name)
           .coverText(BasicConstants.FONT_SIZE_LARGE)
-        Text(this.playList.tags.toString())
-          .coverText(BasicConstants.FONT_SIZE_SMALL)
-          .opacity(0.6)
-        Text(this.playList!.description)
-          .coverText(BasicConstants.FONT_SIZE_NORMAL)
-          .opacity(0.8)
+        if(this.playListType === playListType.playList){
+          Text(this.playList.tags!.toString())
+            .coverText(BasicConstants.FONT_SIZE_SMALL)
+            .opacity(0.6)
+          Text(this.playList.description)
+            .coverText()
+            .opacity(0.8)
+        }else {
+          Text(this.playList.artist?.name)
+            .coverText()
+          Text(formatData(this.playList.publishTime!) + ' 发行')
+            .coverText(BasicConstants.FONT_SIZE_SMALL)
+            .opacity(0.6)
+        }
       }
       .padding({
         left: 10,
@@ -154,43 +215,48 @@ struct Music {
   }
   @Builder coverButtonsBuilder() {
     Row(){
-      Button(){
-        Row(){
-          Image($r('app.media.icon_share'))
-            .width(20)
-          Text(countTransform(this.playList.shareCount,false))
-            .fontColor('#ffffff')
-            .margin({left:5})
+      if(this.playListType === playListType.playList) {
+        Button(){
+          Row(){
+            Image($r('app.media.icon_share'))
+              .width(20)
+            Text(countTransform(this.playList.shareCount,false))
+              .fontColor('#ffffff')
+              .margin({left:5})
+          }
+          .justifyContent(FlexAlign.Center)
         }
-        .justifyContent(FlexAlign.Center)
-      }
-      .coverButtons()
-      Button(){
-        Row(){
-          Image($r('app.media.icon_comment'))
-            .width(20)
-          Text(countTransform(this.playList!.subscribedCount,false))
-            .fontColor('#ffffff')
-            .margin({left:5})
+        .coverButtons()
+        Button(){
+          Row(){
+            Image($r('app.media.icon_comment'))
+              .width(20)
+            Text(countTransform(this.playList!.subscribedCount,false))
+              .fontColor('#ffffff')
+              .margin({left:5})
+          }
+          .justifyContent(FlexAlign.Center)
         }
-        .justifyContent(FlexAlign.Center)
-      }
-      .coverButtons()
-      Button(){
-        Row(){
-          Image($r('app.media.icon_add_track'))
-            .width(20)
-          Text(countTransform(this.playList.trackCount,false))
-            .fontColor('#ffffff')
-            .margin({left:5})
+        .coverButtons()
+        Button(){
+          Row(){
+            Image($r('app.media.icon_add_track'))
+              .width(20)
+            Text(countTransform(this.playList.trackCount,false))
+              .fontColor('#ffffff')
+              .margin({left:5})
+          }
+          .justifyContent(FlexAlign.Center)
         }
-        .justifyContent(FlexAlign.Center)
+        .coverButtons()
+      }else {
+        Text(this.playList.description)
+          .coverText(BasicConstants.FONT_SIZE_NORMAL,4)
       }
-      .coverButtons()
     }
     .margin({top:10})
     .width(BasicConstants.FULL_WIDTH)
-    .justifyContent(FlexAlign.SpaceBetween)
+    .justifyContent(this.playListType === playListType.playList?FlexAlign.SpaceBetween:FlexAlign.Start)
     .alignItems(VerticalAlign.Center)
   }
   @Builder songListBuilder(){
@@ -255,11 +321,11 @@ struct Music {
               Row() {
                 Column({ space: 5 }) {
                   Text(item.name)
-                    .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                    .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                     .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_default'))
                     .maxLines(1)
                     .textOverflow({overflow:TextOverflow.Ellipsis})
-                  Text(item.showArtists.toString())
+                  Text(item.showArtists.toString() || this.playList.artist?.name)
                     .fontSize(BasicConstants.FONT_SIZE_SMALL)
                     .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : '#ffa49a9a')
                     .maxLines(1)
@@ -275,7 +341,7 @@ struct Music {
                 router.pushUrl({
                   url:'pages/Play',
                   params:{
-                    value:item
+                    param:item
                   }
                 })
               })

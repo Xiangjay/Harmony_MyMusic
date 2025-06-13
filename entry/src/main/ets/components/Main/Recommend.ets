@@ -4,7 +4,8 @@ import {getRecommendSongList,getRecommendMVList, getRecommendNewSongs,
 import { countTransform,myDataMerge, SpecificKey } from '../../common/utils/CommonTools'
 import {Title} from '../common/Title'
 import { router } from '@kit.ArkUI'
-import {PlayListModel,recommendMVList,SongModel,recommendDjProgram} from '../../models/DataModels'
+import {PlayListModel,recommendMVList,SongModel,recommendDjProgram,musicRouterParamsModel,
+  playListType} from '../../models/DataModels'
 import log from '@open/log'
 import { Loading } from '../common/Loading'
 
@@ -81,10 +82,14 @@ export struct Recommend {
                   .height(150)
                   .borderRadius(10)
                   .onClick(()=>{
+                    const param:musicRouterParamsModel = {
+                      id:item.id,
+                      type:playListType.playList
+                    }
                     router.pushUrl({
                       url:'pages/Music',
                       params: {
-                        value:item.id
+                        param: param
                       }
                     })
                   })

@@ -5,7 +5,6 @@ import { My } from '../components/My';
 import { Note } from '../components/Note';
 import { router } from '@kit.ArkUI';
 
-
 @Entry
 @Component
 struct Index {

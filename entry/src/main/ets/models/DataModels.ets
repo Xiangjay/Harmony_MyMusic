@@ -1,9 +1,17 @@
 //路由参数类型
-export class routerParamsType<T>{
-  value:T
-  constructor(value:T) {
-    this.value = value
+export class routerParams<T>{
+  param:T
+  constructor(param:T) {
+    this.param = param
   }
+}
+export class musicRouterParamsModel{
+  id:number = 0
+  type:playListType = playListType.playList
+}
+export enum playListType{
+  playList = 0,
+  album = 1,
 }
 
 //程序需要的歌单数据类型
@@ -17,9 +25,11 @@ export class PlayListModel{
   playCount:number = 0
   trackCount:number = 0
   description:string = ''
-  tags:string[] = []
+  tags?:string[] = []
   subscribedCount:number = 0
   shareCount:number = 0
+  artist?:Artist = new Artist() //专辑用
+  publishTime?:number = 0 //专辑用
 }
 
 //程序需要的歌曲数据类型
@@ -57,6 +67,10 @@ export class Album{
   id:number = 0
   name:string = ''
   picUrl:string = ''
+}
+export class AlbumDetail{
+  songs:Array<SongModel> = []
+  album: newestAlbum = new newestAlbum()
 }
 
 /*

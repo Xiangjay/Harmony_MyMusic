@@ -19,3 +19,7 @@ export function getSongDetailByIds<T,K>(songIds:number[]){
 export function getSingerDetailById<T,K>(singerId:number){
   return myHttp<T,K>(`/artist/detail?id=${singerId}`)
 }
+//通过歌手id获取歌手详细信息
+export function getAlbumDetailById<T,K>(albumId:number){
+  return myHttp<T,K>(`/album?id=${albumId}`)
+}

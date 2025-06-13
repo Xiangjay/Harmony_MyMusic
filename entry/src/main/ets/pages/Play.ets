@@ -1,4 +1,4 @@
-import { playListModel, routerParamsType, songModel,playMode} from '../../../backup/DataModel'
+import { playListModel, songModel,playMode} from '../../../backup/DataModel'
 import { router } from '@kit.ArkUI'
 import {getSingerDetailById} from '../common/apis/MusicApis'
 import {responseSinger} from '../../../backup/DataModel'
@@ -6,6 +6,7 @@ import { BasicConstants } from '../common/constants/BasicConstants'
 import { numberToTime } from '../common/utils/CommonTools'
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
 import log from '@open/log'
+import { routerParams } from '../models/DataModels'
 
 @Entry
 @Component
@@ -27,7 +28,7 @@ struct Play {
     this.currentSong.showPic = res.data.artist.cover
   }
   aboutToAppear(): void {
-    this.currentSong = (this.params as routerParamsType<songModel>).value
+    this.currentSong = (this.params as routerParams<songModel>).param
     this.playIndex = this.currentPlayList.songs.findIndex(song=>song.id === this.currentSong.id)
     if(!this.currentSong.showPic){  //如果没有专辑封面那就用歌手头像当歌曲图片
       this.getSingerById()
