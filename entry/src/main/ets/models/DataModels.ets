@@ -165,3 +165,16 @@ export class commentsUser{
   nickname:string = ''
   avatarUrl:string = ''
 }
+
+/*
+ * MV tab
+*/
+export class MVModel{
+  id:number = 0
+  name:string = ''
+  cover:string = ''
+  playCount:number = 0
+  briefDesc:string = ''
+  artistName:string = ''
+  duration:number = 0
+}

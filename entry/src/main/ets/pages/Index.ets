@@ -27,6 +27,10 @@ struct Index {
         router.pushUrl({
           url:'pages/Music'
         })
+      }else if(targetIndex === 2) {
+        router.pushUrl({
+          url:'pages/MV'
+        })
       }else {
         this.tabController.changeIndex(targetIndex)
       }
@@ -48,7 +52,6 @@ struct Index {
       .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
       .tabBar(this.tabBarBuilder('音乐',1,$r("app.media.icon_find")))
       TabContent(){
-        Note()
       }
       .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
       .tabBar(this.tabBarBuilder('MV',2,$r("app.media.icon_note")))

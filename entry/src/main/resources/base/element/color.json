@@ -47,6 +47,10 @@
     {
       "name": "top_tabBar_text",
       "value": "#1a1a1a"
+    },
+    {
+      "name": "back_icon",
+      "value": "#3b3f42"
     }
   ]
 }

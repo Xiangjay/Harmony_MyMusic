@@ -68,7 +68,6 @@ export struct Recommend {
     this.getRecommendNewSons()
     this.getRecommendDjProgramsList()
   }
-
   @Builder recommendSongListBuilder(){
     Column({space:10}){
       Title({title:'精选歌单'})
@@ -112,6 +111,7 @@ export struct Recommend {
                 .maxLines(2)
                 .textOverflow({overflow:TextOverflow.Ellipsis})
             }
+            .borderRadius(10)
             .height(BasicConstants.FULL_HEIGHT)
             .width('40%')
             .margin({right:10})
@@ -146,6 +146,7 @@ export struct Recommend {
               .maxLines(2)
               .textOverflow({ overflow: TextOverflow.Ellipsis})
           }
+          .borderRadius(10)
         },(item:recommendMVList)=>item.id.toString())
       }
       .autoPlay(true)
@@ -208,7 +209,7 @@ export struct Recommend {
                 .fontSize(BasicConstants.FONT_SIZE_SMALL)
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
-                .borderRadius(5)
+                .borderRadius(10)
                 .onClick(()=>{
                   this.currentIndex = 3
                 })
@@ -218,6 +219,7 @@ export struct Recommend {
             .margin({right:10})
             .alignItems(HorizontalAlign.Start)
             .justifyContent(FlexAlign.SpaceBetween)
+            .borderRadius(10)
           }
         },(item:recommendDjProgram)=>item.id.toString())
       }

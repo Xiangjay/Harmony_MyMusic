@@ -47,6 +47,10 @@
     {
       "name": "label_text",
       "value": "#fcfcfc"
+    },
+    {
+      "name": "back_icon",
+      "value": "#ecf0f3"
     }
   ]
 }

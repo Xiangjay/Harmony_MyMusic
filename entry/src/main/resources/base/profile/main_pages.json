@@ -4,6 +4,8 @@
     "pages/EntryPage",
     "pages/Play",
     "pages/Music",
-    "pages/Comments"
+    "pages/Comments",
+    "pages/MV",
+    "pages/PlayMV"
   ]
 }
