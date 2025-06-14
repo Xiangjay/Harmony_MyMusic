@@ -6,7 +6,6 @@ import {Title} from '../common/Title'
 import { router } from '@kit.ArkUI'
 import {PlayListModel,recommendMVList,SongModel,recommendDjProgram,musicRouterParamsModel,
   playListType} from '../../models/DataModels'
-import log from '@open/log'
 import { Loading } from '../common/Loading'
 
 @Component
@@ -15,6 +14,8 @@ export struct Recommend {
   @State recommendMVList:Array<recommendMVList> = []
   @State recommendNewSongs:Array<SongModel> = []
   @State recommendDjPrograms:Array<recommendDjProgram> = []
+  @State songListItemHeight: number = -1
+  @State djListItemHeight: number = -1
   @Link currentIndex:number
   @State isLoading:boolean = true
 
@@ -68,10 +69,11 @@ export struct Recommend {
     this.getRecommendNewSons()
     this.getRecommendDjProgramsList()
   }
+
   @Builder recommendSongListBuilder(){
     Column({space:10}){
       Title({title:'精选歌单'})
-      List(){
+      List({space:10}){
         ForEach(this.recommendSongList,(item:PlayListModel)=>{
           ListItem(){
             Column({space:5}){
@@ -111,11 +113,12 @@ export struct Recommend {
                 .maxLines(2)
                 .textOverflow({overflow:TextOverflow.Ellipsis})
             }
-            .borderRadius(10)
-            .height(BasicConstants.FULL_HEIGHT)
             .width('40%')
-            .margin({right:10})
-          }
+          }.onAreaChange((oldArea: Area, newArea: Area) => {
+            if (this.songListItemHeight < newArea.height) {
+              this.songListItemHeight = newArea.height as number
+            }
+          })
         },(item:PlayListModel)=>item.id.toString())
       }
       .listDirection(Axis.Horizontal)
@@ -123,7 +126,7 @@ export struct Recommend {
       .edgeEffect(EdgeEffect.None)
       .fadingEdge(true)
       .width(BasicConstants.FULL_WIDTH)
-      .height(190)  //  变成横向布局后list会默认非常高，所以高度限制一下
+      .height(this.songListItemHeight)
     }
     .margin({top:20})
   }
@@ -135,8 +138,7 @@ export struct Recommend {
           Stack({alignContent:Alignment.Bottom}){
             Image(item.picUrl)
               .width(BasicConstants.FULL_WIDTH)
-              .height(150)
-              .borderRadius(10)
+              .height(160)
             Text(item.copywriter)
               .width(BasicConstants.FULL_WIDTH)
               .fontSize(BasicConstants.FONT_SIZE_NORMAL)
@@ -147,6 +149,15 @@ export struct Recommend {
               .textOverflow({ overflow: TextOverflow.Ellipsis})
           }
           .borderRadius(10)
+          .clip(true)
+          .onClick(()=>{
+            router.pushUrl({
+              url:'pages/PlayMV',
+              params: {
+                param:item.id
+              }
+            })
+          })
         },(item:recommendMVList)=>item.id.toString())
       }
       .autoPlay(true)
@@ -165,14 +176,16 @@ export struct Recommend {
                 .width('30%')
               Column(){
                 Text(item.name)
-                  .fontSize(FontWeight.Bold)
+                  .fontWeight(FontWeight.Bold)
                   .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                  .fontColor($r('app.color.text_default'))
                   .maxLines(1)
                   .textOverflow({overflow:TextOverflow.Ellipsis})
                 Text(item.showArtists.toString())
                   .fontSize(BasicConstants.FONT_SIZE_SMALL)
                   .maxLines(1)
                   .textOverflow({overflow:TextOverflow.Ellipsis})
+                  .fontColor($r('app.color.text_light'))
               }
               .width('70%')
               .height(BasicConstants.FULL_HEIGHT)
@@ -198,29 +211,33 @@ export struct Recommend {
   @Builder recommendDjProgramsBuilder(){
     Column({space:10}){
       Title({title:'推荐电台'})
-      List(){
+      List({space:10}){
         ForEach(this.recommendDjPrograms,(item:recommendDjProgram)=>{
           ListItem(){
-            Column({space:10}){
+            Column(){
               Text(item.name)
-                .width('100%')
+                .width(BasicConstants.FULL_WIDTH)
                 .maxLines(2)
                 .textOverflow({overflow:TextOverflow.Ellipsis})
                 .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                .fontColor($r('app.color.text_light'))
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
+                .height(150)
                 .borderRadius(10)
+                .margin({top:10})
                 .onClick(()=>{
                   this.currentIndex = 3
                 })
             }
-            .height(BasicConstants.FULL_HEIGHT)
             .width('40%')
-            .margin({right:10})
-            .alignItems(HorizontalAlign.Start)
             .justifyContent(FlexAlign.SpaceBetween)
-            .borderRadius(10)
-          }
+            .height(this.djListItemHeight)
+          }.onAreaChange((oldArea: Area, newArea: Area) => {
+            if (this.djListItemHeight < newArea.height) {
+              this.djListItemHeight = newArea.height as number
+            }
+          })
         },(item:recommendDjProgram)=>item.id.toString())
       }
       .listDirection(Axis.Horizontal)
@@ -228,7 +245,7 @@ export struct Recommend {
       .edgeEffect(EdgeEffect.None)
       .fadingEdge(true)
       .width(BasicConstants.FULL_WIDTH)
-      .height(180)
+      .height(this.djListItemHeight)
     }
     .margin({
       bottom:20
@@ -237,7 +254,7 @@ export struct Recommend {
 
   build() {
     Scroll(){
-      Column({space:20}){
+      Column({space:30}){
         if (!this.isLoading){
           //精选歌单
           this.recommendSongListBuilder()
@@ -252,10 +269,10 @@ export struct Recommend {
         }
       }
     }
-    .margin({bottom:60})
+    .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Fade)
+    .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
+    .height(BasicConstants.FULL_HEIGHT)
     .width(BasicConstants.FULL_WIDTH)
-    .padding({
-      left:10
-    })
   }
 }

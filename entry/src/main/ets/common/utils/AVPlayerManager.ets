@@ -1,5 +1,5 @@
 import { media } from "@kit.MediaKit";
-import { playListModel, songModel,playMode} from '../../../../backup/DataModel'
+import {SongModel,PlayListModel,PlayMode} from '../../models/DataModels'
 import { aVSessionManger } from "./AVSessionManager";
 import log from '@open/log'
 
@@ -7,12 +7,12 @@ export class AVPlayerManager{
   //音频播放器
   private audioPlayer: media.AVPlayer | null = null
 
-  currentSong:songModel = AppStorage.get('currentSong')!
+  currentSong:SongModel = AppStorage.get('currentSong')!
 
   //初始化音乐播放器并监听播放状态
   async initAudioPlayer(){
     //初始化播放器的时候先全局存一个当前歌曲
-    AppStorage.setOrCreate<songModel>('currentSong',new songModel())
+    AppStorage.setOrCreate<SongModel>('currentSong',new SongModel())
     if(!this.audioPlayer){
       this.audioPlayer = await media.createAVPlayer()
     }
@@ -24,13 +24,13 @@ export class AVPlayerManager{
         this.audioPlayer?.play()
         this.currentSong.isPlaying = true
       } else if(state === 'completed'){ //当一首歌播放结束时，要根据播放模式选择下一首要播放的歌曲
-        const currentPlayList:playListModel = AppStorage.get('currentPlayList')!  //先从全局拿当前播放列表
+        const currentPlayList:PlayListModel = AppStorage.get('currentPlayList')!  //先从全局拿当前播放列表
         switch (currentPlayList.playMode) {
-          case playMode.random: //随机模式
+          case PlayMode.random: //随机模式
             let playIndex:number = Math.floor(Math.random() * currentPlayList.songs.length)
             this.playSong(currentPlayList.songs[playIndex])
             break;
-          case playMode.repeat: //重新播放当前歌曲
+          case PlayMode.repeat: //重新播放当前歌曲
             this.audioPlayer?.play()
             break;
           default:  //自动模式
@@ -43,7 +43,7 @@ export class AVPlayerManager{
             break;
         }
       } else if(state === 'released'){
-        this.currentSong = new songModel()
+        this.currentSong = new SongModel()
         AppStorage.setOrCreate('currentSong',this.currentSong)
       }
     })
@@ -61,7 +61,7 @@ export class AVPlayerManager{
   }
 
   //播放歌曲
-  async playSong(song:songModel){
+  async playSong(song:SongModel){
     aVSessionManger.startBackgroundTask() //申请长时任务
     this.currentSong = AppStorage.get('currentSong')!   //先从全局拿正在播放的currentSong
     aVSessionManger.setAVPlayBackState(song,AppStorage.get('currentPlayList')!)  //设置播控中心播放状态
@@ -73,10 +73,10 @@ export class AVPlayerManager{
     }
   }
   //  切换歌曲
-  async changeSong(song:songModel){
+  async changeSong(song:SongModel){
     this.currentSong = song
     this.currentSong.isPlaying = true
-    AppStorage.setOrCreate<songModel>('currentSong',this.currentSong) //全局保存正在播放的歌曲
+    AppStorage.setOrCreate<SongModel>('currentSong',this.currentSong) //全局保存正在播放的歌曲
     await this.audioPlayer?.reset()  // 切换歌曲需要先重置播放器
     this.audioPlayer!.url = song.url
     //设置播控数据元数据
@@ -96,10 +96,10 @@ export class AVPlayerManager{
 
   //上一首
   playPrev(){
-    const currentPlayList:playListModel = AppStorage.get('currentPlayList')!
+    const currentPlayList:PlayListModel = AppStorage.get('currentPlayList')!
     let playIndex:number = currentPlayList.songs.findIndex(song=>song.id === this.currentSong.id)
     switch (currentPlayList.playMode) {
-      case playMode.random: //随机模式
+      case PlayMode.random: //随机模式
         playIndex = Math.floor(Math.random() * currentPlayList.songs.length)
         break;
       default:  //自动播放模式和单曲循环模式时，当用户点击上一首和下一首是和自动播放模式一样的
@@ -116,10 +116,10 @@ export class AVPlayerManager{
   }
   //下一首
   playNext(){
-    const currentPlayList:playListModel = AppStorage.get('currentPlayList')!
+    const currentPlayList:PlayListModel = AppStorage.get('currentPlayList')!
     let playIndex:number = currentPlayList.songs.findIndex(song=>song.id === this.currentSong.id)
     switch (currentPlayList.playMode) {
-      case playMode.random: //随机模式
+      case PlayMode.random: //随机模式
         playIndex = Math.floor(Math.random() * currentPlayList.songs.length)
         break;
       default:  //自动播放模式和单曲循环模式时，当用户点击上一首和下一首是和自动播放模式一样的

@@ -1,7 +1,6 @@
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { BreakPointConstants } from '../common/constants/BreakPointConstants'
-import { BreakPointTool } from '../common/utils/BreakPointTool'
-import { router, AlertDialog } from '@kit.ArkUI'
+import { router, AlertDialog, window } from '@kit.ArkUI'
 import { common, ConfigurationConstant } from '@kit.AbilityKit'
 import {preferencesUtil} from '../common/utils/PreferencesUtils'
 import { preferences } from '@kit.ArkData'
@@ -9,14 +8,14 @@ import { preferences } from '@kit.ArkData'
 @Entry
 @Component
 struct EntryPage {
-  //实例化BreakPointTool，这段代码在最后会放到整个项目的entryAbility里
-  private breakPointTool = new BreakPointTool()
+  @StorageProp('safeTop') safeTop: number = 0;
   @StorageProp(BreakPointConstants.CURRENT_BREAKPOINT) currentBreakPoint: string = BreakPointConstants.BREAKPOINT_SM
-  @State timeLeft: number = 3
+  @State timeLeft: number = 1
   private intervalId: number = 0
   //从用户首选项中拿用户设定的主题，如果拿不到theme代表用户第一次进入该应用，要让用户选择主题
   @State theme:preferences.ValueType = preferencesUtil.getData('theme')
   private context = getContext(this) as common.UIAbilityContext	//拿到当前上下文
+  windowClass: window.Window = AppStorage.get("windowClass") as window.Window;	//拿到全局window对象
 
   //更换主题弹窗
   dialogController: CustomDialogController = new CustomDialogController({
@@ -28,6 +27,9 @@ struct EntryPage {
         action: () => {
           this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_DARK);
           preferencesUtil.insertData('theme','dark')
+          this.windowClass.setWindowSystemBarProperties({
+            statusBarContentColor: '#ffffff'
+          });
           this.startInterval()
         },
       },
@@ -37,6 +39,9 @@ struct EntryPage {
         action: () => {
           this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT);
           preferencesUtil.insertData('theme','light')
+          this.windowClass.setWindowSystemBarProperties({
+            statusBarContentColor: '#000000'
+          });
           this.startInterval()
         }
       },
@@ -64,25 +69,24 @@ struct EntryPage {
     }else {
       this.startInterval()
     }
-    //  注册媒体查询工具
-    this.breakPointTool.breakPointRegister()
   }
 
   aboutToDisappear(): void {
-    this.breakPointTool.breakPointerOffRegister()
     clearInterval(this.intervalId)
   }
 
   build() {
     Stack({alignContent:Alignment.TopEnd}){
       Image($r('app.media.ad'))
-        .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
+        .width(BasicConstants.FULL_WIDTH)
+        .height(BasicConstants.FULL_HEIGHT)
       Button('跳过 ' + this.timeLeft)
         .fontSize(this.currentBreakPoint === BreakPointConstants.BREAKPOINT_XL ? BasicConstants.FONT_SIZE_XLARGE : this.currentBreakPoint === BreakPointConstants.BREAKPOINT_LG ? BasicConstants.FONT_SIZE_LARGE : BasicConstants.FONT_SIZE_SMALL)
-        .backgroundColor(Color.Gray)
+        .backgroundColor('#3b3f42')
+        .fontColor(Color.White)
         .margin({
           right: 15,
-          top: this.currentBreakPoint === BreakPointConstants.BREAKPOINT_XL ? 30 : 0
+          top: this.safeTop
         })
         .onClick(() => {
           router.replaceUrl({
@@ -92,6 +96,5 @@ struct EntryPage {
     }
     .width(BasicConstants.FULL_WIDTH)
     .height(BasicConstants.FULL_WIDTH)
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }

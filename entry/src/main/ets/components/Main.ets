@@ -126,25 +126,30 @@ export struct Main {
           TabContent() {
             Recommend({currentIndex:this.currentIndex})
           }
+          .padding({left:10})
           .tabBar(this.tabBarBuilder('推荐',0))
           TabContent() {
             Newest()
           }
+          .padding({left:10})
           .tabBar(this.tabBarBuilder('最新',1))
 
           TabContent() {
             Rank()
           }
+          .padding({left:10})
           .tabBar(this.tabBarBuilder('排行榜',2))
 
           TabContent() {
             Empty({isPage:false})
           }
+          .padding({left:10})
           .tabBar(this.tabBarBuilder('电台',3))
 
           TabContent() {
             Empty({isPage:false})
           }
+          .padding({left:10})
           .tabBar(this.tabBarBuilder('免费听',4))
         }
         .barHeight(50)
@@ -161,11 +166,10 @@ export struct Main {
       .width(BasicConstants.FULL_WIDTH)
       .height(BasicConstants.FULL_HEIGHT)
     }
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
     .backgroundColor($r('app.color.content_background'))
     .sideBarWidth(BasicConstants.FULL_WIDTH)
     .showControlButton(false)
     .showSideBar(this.showSideBar)
-    .animation({duration:500})
+    .animation({duration:300})
   }
 }

@@ -2,23 +2,27 @@
   "color": [
     {
       "name": "start_window_background",
-      "value": "#000000"
+      "value": "#131215"
     },
     {
       "name": "window_background",
-      "value": "#3b3f42"
+      "value": "#131215"
     },
     {
       "name": "content_background",
       "value": "#131215"
     },
     {
+      "name": "main_tab_background",
+      "value": "#3a3e41"
+    },
+    {
       "name": "text_default",
-      "value": "#fcfcfc"
+      "value": "#ffffff"
     },
     {
       "name": "text_light",
-      "value": "#83868f"
+      "value": "#a9a9a9"
     },
     {
       "name": "icon_svg_default",
@@ -46,11 +50,15 @@
     },
     {
       "name": "label_text",
-      "value": "#fcfcfc"
+      "value": "#ffffff"
     },
     {
       "name": "back_icon",
       "value": "#ecf0f3"
+    },
+    {
+      "name": "list_divider",
+      "value": "#808080"
     }
   ]
 }

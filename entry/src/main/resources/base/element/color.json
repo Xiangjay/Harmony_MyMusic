@@ -2,7 +2,7 @@
   "color": [
     {
     "name": "start_window_background",
-    "value": "#fff"
+    "value": "#ffffff"
     },
     {
       "name": "window_background",
@@ -10,11 +10,19 @@
     },
     {
       "name": "content_background",
+      "value": "#ffffff"
+    },
+    {
+      "name": "main_tab_background",
       "value": "#ecf0f3"
     },
     {
       "name": "text_default",
       "value": "#000001"
+    },
+    {
+      "name": "text_light",
+      "value": "#808080"
     },
     {
       "name": "icon_svg_default",
@@ -38,11 +46,11 @@
     },
     {
       "name": "label_background",
-        "value": "#99ffffff"
+      "value": "#7f3b3f42"
     },
     {
       "name": "label_text",
-      "value": "#000001"
+      "value": "#ffffff"
     },
     {
       "name": "top_tabBar_text",
@@ -50,7 +58,11 @@
     },
     {
       "name": "back_icon",
-      "value": "#3b3f42"
+      "value": "#696969"
+    },
+    {
+      "name": "list_divider",
+      "value": "#696969"
     }
   ]
 }

@@ -37,7 +37,7 @@ export struct Newest {
   }
 
   aboutToAppear(): void {
-    this.getBanner()
+    // this.getBanner()
     this.getNewestAlbumsList()
     this.getNewestMVList()
   }
@@ -85,14 +85,13 @@ export struct Newest {
   @Builder newestAlbumsBuilder(){
     Column({space:10}){
       Title({title:'最新专辑'})
-      List(){
+      List({space:10}){
         ForEach(this.newestAlbumsList,(item:newestAlbum)=>{
           ListItem(){
             RelativeContainer(){
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
                 .height(BasicConstants.FULL_HEIGHT)
-                .borderRadius(10)
                 .onClick(()=>{
                   const param:musicRouterParamsModel = {
                     id:item.id,
@@ -122,15 +121,18 @@ export struct Newest {
                 .fontColor($r('app.color.label_text'))
                 .borderRadius(5)
                 .padding(5)
-                .fontSize(BasicConstants.FONT_SIZE_XSMALL)
+                .fontSize(BasicConstants.FONT_SIZE_SMALL)
                 .margin({right:5,bottom:5})
+                .maxLines(1)
+                .textOverflow({overflow:TextOverflow.Ellipsis})
                 .alignRules({
                   'bottom': { 'anchor': '__container__', 'align': VerticalAlign.Bottom },
                   'right': { 'anchor': '__container__', 'align': HorizontalAlign.End }
                 })
             }
             .width('40%')
-            .margin({right:10})
+            .clip(true)
+            .borderRadius(10)
           }
         },(item:newestAlbum)=>item.id.toString())
       }
@@ -141,6 +143,7 @@ export struct Newest {
       .width(BasicConstants.FULL_WIDTH)
       .height(200)  //  变成横向布局后list会默认非常高，所以高度限制一下
     }
+    .margin({top:20})
   }
   @Builder newestMVBuilder(){
     Column({space:10}){
@@ -150,8 +153,8 @@ export struct Newest {
           RelativeContainer(){
             Image(item.cover)
               .width(BasicConstants.FULL_WIDTH)
-              .height(200)
-              .borderRadius(10)
+              .height(BasicConstants.FULL_HEIGHT)
+              .objectFit(ImageFit.Cover)
             Text(item.name)
               .fontSize(BasicConstants.FONT_SIZE_NORMAL)
               .fontColor($r('app.color.label_text'))
@@ -176,6 +179,8 @@ export struct Newest {
                 'right': { 'anchor': '__container__', 'align': HorizontalAlign.End }
               })
           }
+          .clip(true)
+          .borderRadius(10)
           .height(200)
         },(item:newestMV)=>item.id.toString())
       }
@@ -187,24 +192,27 @@ export struct Newest {
   }
 
   build() {
-    if(!this.isLoading){
-      Scroll(){
-        Column({space:20}){
-          //banner区域
-          this.swiperBuilder()
+    // Scroll(){
+      Column({space:30}){
+        if(!this.isLoading){
           //最新专辑区域
           this.newestAlbumsBuilder()
           //最新MV区域
           this.newestMVBuilder()
+        }else {
+          Loading()
         }
       }
-      .margin({bottom:60})
+      //内容没铺满高度，所以要有下面的属性
+      .height(BasicConstants.FULL_HEIGHT)
       .width(BasicConstants.FULL_WIDTH)
-      .padding({
-        left:10
-      })
-    }else {
-      Loading()
+      .justifyContent(FlexAlign.Start)
+      .padding({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
     }
-  }
+    // .scrollBar(BarState.Off)
+    // .edgeEffect(EdgeEffect.Fade)
+    // .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
+    // .height(BasicConstants.FULL_HEIGHT)
+    // .width(BasicConstants.FULL_WIDTH)
+  // }
 }

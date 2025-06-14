@@ -1,7 +1,8 @@
 import { avSession } from '@kit.AVSessionKit'
 import backgroundTaskManager from '@ohos.resourceschedule.backgroundTaskManager'
 import { wantAgent } from '@kit.AbilityKit';
-import { playListModel, songModel,playMode } from '../../../../backup/DataModel';
+// import { PlayListModel, SongModel,PlayMode } from '../../../../backup/DataModel';
+import {SongModel,PlayListModel,PlayMode} from '../../models/DataModels'
 import { avPlayerManager } from './AVPlayerManager';
 
 class AVSessionManger{
@@ -32,7 +33,7 @@ class AVSessionManger{
   }
 
   //设置元数据
-  setAVMetadata(song:songModel){
+  setAVMetadata(song:SongModel){
     //播控中心显示的图片、名称等
     this.avSession?.setAVMetadata({
       assetId:song.id.toString(),
@@ -43,15 +44,15 @@ class AVSessionManger{
     })
   }
   //设置播放状态
-  setAVPlayBackState(song:songModel,currentPlayList:playListModel){
+  setAVPlayBackState(song:SongModel,currentPlayList:PlayListModel){
     //可以简单理解为播控中心里的播放器，在AVPlayer播放、暂停时调用
     let aVSessionPlayMode:avSession.LoopMode
     //把当前播放列表传进来，同步当前播放模式给播控中心
     switch (currentPlayList.playMode) {
-      case playMode.random:
+      case PlayMode.random:
         aVSessionPlayMode = avSession.LoopMode.LOOP_MODE_SHUFFLE
         break;
-      case playMode.repeat:
+      case PlayMode.repeat:
         aVSessionPlayMode = avSession.LoopMode.LOOP_MODE_SINGLE
         break;
       default:
@@ -71,7 +72,7 @@ class AVSessionManger{
   //注册事件
   registerEvent(){
     this.avSession?.on('play',()=>{
-      let currentSong:songModel = AppStorage.get('currentSong')!
+      let currentSong:SongModel = AppStorage.get('currentSong')!
       avPlayerManager.playSong(currentSong)
     })
     this.avSession?.on('pause',()=>{
@@ -94,15 +95,15 @@ class AVSessionManger{
         LOOP_MODE_SHUFFLE	3	随机播放。
         LOOP_MODE_CUSTOM	4	自定义播放。
       */
-      let currentPlayList:playListModel = AppStorage.get('currentPlayList')!
+      let currentPlayList:PlayListModel = AppStorage.get('currentPlayList')!
       switch (mode) {
         case 1:
-          currentPlayList.playMode = playMode.auto
+          currentPlayList.playMode = PlayMode.auto
           break;
         case 3:
-          currentPlayList.playMode = playMode.repeat
+          currentPlayList.playMode = PlayMode.repeat
           break;
-        default: currentPlayList.playMode = playMode.random
+        default: currentPlayList.playMode = PlayMode.random
           break;
       }
       //同步当前播放模式给全局

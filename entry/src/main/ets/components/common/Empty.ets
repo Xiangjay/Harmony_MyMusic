@@ -13,6 +13,7 @@ export struct Empty {
           .width(30)
           .height(30)
           .margin({left:10})
+          .fillColor($r('app.color.back_icon'))
           .onClick(()=>{
             router.back()
           })

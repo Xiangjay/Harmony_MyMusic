@@ -1,5 +1,5 @@
 import { BasicConstants } from "../common/constants/BasicConstants"
-import { AlertDialog } from '@kit.ArkUI'
+import { AlertDialog, window } from '@kit.ArkUI'
 import { common, ConfigurationConstant } from '@kit.AbilityKit'
 import {preferencesUtil} from '../common/utils/PreferencesUtils'
 import { preferences } from '@kit.ArkData'
@@ -10,6 +10,7 @@ export struct SideBar {
   //从用户首选项中拿用户设定的主题，如果拿不到theme代表用户第一次进入该应用，要让用户选择主题
   @State theme:preferences.ValueType = preferencesUtil.getData('theme')
   private context = getContext(this) as common.UIAbilityContext	//拿到当前上下文
+  windowClass: window.Window = AppStorage.get("windowClass") as window.Window;	//拿到全局window对象
 
   //更换主题弹窗
   dialogController: CustomDialogController = new CustomDialogController({
@@ -21,6 +22,9 @@ export struct SideBar {
       action: () => {
         this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_DARK);
         preferencesUtil.insertData('theme','dark')
+        this.windowClass.setWindowSystemBarProperties({
+          statusBarContentColor: '#ffffff'
+        });
       },
     },
     secondaryButton: {
@@ -29,6 +33,9 @@ export struct SideBar {
       action: () => {
         this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT);
         preferencesUtil.insertData('theme','light')
+        this.windowClass.setWindowSystemBarProperties({
+          statusBarContentColor: '#000000'
+        });
       }
     },
   })

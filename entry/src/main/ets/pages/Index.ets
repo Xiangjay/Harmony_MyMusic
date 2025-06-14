@@ -2,12 +2,13 @@ import { BreakPointConstants } from '../common/constants/BreakPointConstants'
 import {BasicConstants} from '../common/constants/BasicConstants'
 import { Main } from '../components/Main';
 import { My } from '../components/My';
-import { Note } from '../components/Note';
 import { router } from '@kit.ArkUI';
+import log from '@open/log';
 
 @Entry
 @Component
 struct Index {
+  @StorageProp('safeTop') safeTop: number = 0;
   @StorageProp(BreakPointConstants.CURRENT_BREAKPOINT) currentBreakPoint:string = BreakPointConstants.BREAKPOINT_SM
   @State currentIndex: number = 0;
   private tabController:TabsController = new TabsController()
@@ -35,8 +36,10 @@ struct Index {
         this.tabController.changeIndex(targetIndex)
       }
     })
+    .width(BasicConstants.FULL_WIDTH)
+    .height(BasicConstants.FULL_HEIGHT)
+    .backgroundColor($r('app.color.main_tab_background'))
     .justifyContent(FlexAlign.Center)
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
   }
 
   build() {
@@ -44,28 +47,26 @@ struct Index {
       TabContent(){
         Main()
       }
-      .backgroundColor($r('app.color.content_background'))
-      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
-      .tabBar(this.tabBarBuilder('首页',0,$r("app.media.icon_recommend")))
+      .tabBar(this.tabBarBuilder('首页',0,$r("app.media.icon_home")))
       TabContent(){
       }
-      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
-      .tabBar(this.tabBarBuilder('音乐',1,$r("app.media.icon_find")))
+      .tabBar(this.tabBarBuilder('音乐',1,$r("app.media.icon_music")))
       TabContent(){
       }
-      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
-      .tabBar(this.tabBarBuilder('MV',2,$r("app.media.icon_note")))
+      .tabBar(this.tabBarBuilder('MV',2,$r("app.media.icon_mv")))
       TabContent(){
         My()
       }
-      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
       .tabBar(this.tabBarBuilder('我的',3,$r("app.media.icon_my")))
     }
+    .barHeight(BasicConstants.MAIN_TAB_BAR_HEIGHT)
     .scrollable(false)
-    .backgroundColor($r('app.color.window_background'))
-    .expandSafeArea([SafeAreaType.SYSTEM],[SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
+    .backgroundColor($r('app.color.content_background'))
     .onChange((index:number)=>{
       this.currentIndex = index
+    })
+    .padding({
+      top: this.safeTop
     })
   }
 }

@@ -13,6 +13,8 @@ import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType
   newestAlbum,AlbumDynamic,
   commentsRouterParamsModel} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
+import { TopNavBar } from "../components/common/TopNavBar";
+import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
 
 
 @Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
@@ -26,6 +28,7 @@ import { Loading } from "../components/common/Loading";
 @Entry
 @Component
 struct Music {
+  @StorageProp('safeTop') safeTop: number = 0;
   @State routerParams:musicRouterParamsModel = new musicRouterParamsModel()
   @State noList: boolean = false
   @State playList: PlayListModel = new PlayListModel() //程序需要的数据类型
@@ -38,6 +41,8 @@ struct Music {
   @StorageLink('currentSong') currentSong: SongModel = new SongModel()  //当前正在播放的歌曲
   private uiContext: UIContext = this.getUIContext();
   private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
+  //懒加载数据
+  private musicLazyData:MyLazyDataSource<SongModel> = new MyLazyDataSource()
 
   //通过传过来的歌单ID获取歌单里所有歌曲
   getPlayListDetail = async (id:number) => {
@@ -97,11 +102,11 @@ struct Music {
         }
       })
     })
+    //把数据放入懒加载数据类型中
+    this.musicLazyData.pushAllData(this.playList.songs)
     this.isLoading = false
-    if(!this.isLoading){
-      this.songListHeight = '65%'
-      this.songListOpacity = 1
-    }
+    this.songListHeight = '65%'
+    this.songListOpacity = 1
   }
   //通过传过来的专辑ID获取专辑详细
   getAlbumDetail = async (id:number) =>{
@@ -141,11 +146,11 @@ struct Music {
         }
       })
     })
+    //把数据放入懒加载数据类型中
+    this.musicLazyData.pushAllData(this.playList.songs)
     this.isLoading = false
-    if(!this.isLoading){
-      this.songListHeight = '65%'
-      this.songListOpacity = 1
-    }
+    this.songListHeight = '65%'
+    this.songListOpacity = 1
   }
 
   addList2ToLocal = ()=>{
@@ -287,14 +292,13 @@ struct Music {
               .fontColor($r('app.color.text_default'))
               .fontSize(BasicConstants.FONT_SIZE_NORMAL)
             Span(`(${this.playList?.songs?.length})`)
-              .fontColor('#ffa49a9a')
+              .fontColor($r('app.color.text_light'))
               .fontSize(BasicConstants.FONT_SIZE_SMALL)
           }
         }
         .margin({left:5})
         .layoutWeight(1)
         Image($r("app.media.icon_add_track"))
-          // .fillColor('#ffa49a9a')
           .fillColor($r('app.color.icon_svg_selected'))
           .width(25)
           .height(25)
@@ -303,23 +307,19 @@ struct Music {
           })
       }
       .padding({
-        left:15,
-        right:15
+        left:10,
+        right:10
       })
       .width(BasicConstants.FULL_WIDTH)
       .height(60)
       .alignItems(VerticalAlign.Center)
       .border({
         width: { bottom: 1 },
-        color: '#12ec5c87'
-      })
-      .borderRadius({
-        topLeft: 5,
-        topRight: 5
+        color:$r('app.color.list_divider')
       })
       // 播放列表
       List() {
-        ForEach(this.playList?.songs, (item: SongModel, index: number) => {
+        LazyForEach(this.musicLazyData, (item: SongModel, index: number) => {
           ListItem() {
             Row({space:10}) {
               Row(){
@@ -329,10 +329,10 @@ struct Music {
                     .fillColor($r('app.color.icon_svg_selected'))
                 }else{
                   Text((index + 1).toString())
-                    .fontColor('#ffa49a9a')
+                    .fontColor($r('app.color.text_light'))
                 }
               }
-              .width(20)
+              .width(30)
               Row() {
                 Column({ space: 5 }) {
                   Text(item.name)
@@ -342,7 +342,7 @@ struct Music {
                     .textOverflow({overflow:TextOverflow.Ellipsis})
                   Text(item.showArtists.toString() || this.playList.artist?.name)
                     .fontSize(BasicConstants.FONT_SIZE_SMALL)
-                    .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : '#ffa49a9a')
+                    .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_light'))
                     .maxLines(1)
                     .textOverflow({overflow:TextOverflow.Ellipsis})
                 }
@@ -370,33 +370,36 @@ struct Music {
                   })
               }
             }
-            .height(50)
-            .width(BasicConstants.FULL_WIDTH)
             .padding({
-              left:15,
-              right:15
+              left:10,
+              right:10
             })
+            .height(60)
+            .width(BasicConstants.FULL_WIDTH)
             .alignItems(VerticalAlign.Center)
           }
           .border({
             width: { bottom: 1 },
-            color: '#12ec5c87'
+            color:$r('app.color.list_divider')
           })
         },(item:SongModel)=>item.id.toString())
       }
-      .edgeEffect(EdgeEffect.None)
+      .edgeEffect(EdgeEffect.Spring)
       .fadingEdge(true)
+      .scrollBar(BarState.Off)
       .layoutWeight(1)
     }
     .height(this.songListHeight)
     .opacity(this.songListOpacity)
+    .padding({
+      left:10,
+      right:10
+    })
     .animation({
       duration:this.animationDuration,
     })
     .width(BasicConstants.FULL_WIDTH)
-    .backgroundColor($r('app.color.content_background'))
-    // .backgroundColor('#32ffffff')
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
+    .backgroundColor($r('app.color.main_tab_background'))
   }
 
   build() {
@@ -407,30 +410,19 @@ struct Music {
             .width(BasicConstants.FULL_WIDTH)
             .height(BasicConstants.FULL_HEIGHT)
             .blur(1000)
-            .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
           if (this.isLoading) {
             Loading()
           } else {
-            //头部部分
             Column({ space: 10 }) {
               //后退按钮
-              Row() {
-                Image($r('app.media.icon_back'))
-                  .width(30)
-                  .height(30)
-                  .fillColor(Color.White)
-                  .onClick(() => {
-                    router.back()
-                  })
-              }
-              .justifyContent(FlexAlign.Start)
-              .width(BasicConstants.FULL_WIDTH)
+              TopNavBar({title:'音乐',color:'#ffffff'})
               //封面
               this.coverBuilder()
               //按钮
               this.coverButtonsBuilder()
             }
             .padding({
+              top:this.safeTop,
               left: 10,
               right: 10
             })
@@ -438,16 +430,21 @@ struct Music {
             .height('40%')
           }
         }
-
         //歌单里歌曲列表
         this.songListBuilder()
       }
-      .backgroundColor($r('app.color.window_background'))
       .height(BasicConstants.FULL_HEIGHT)
       .width(BasicConstants.FULL_WIDTH)
-      .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
     } else {
-      Empty({ message: '暂无可播放歌单' })
+      Column(){
+        Empty({ message: '暂无可播放歌单' })
+      }
+      .height(BasicConstants.FULL_HEIGHT)
+      .width(BasicConstants.FULL_WIDTH)
+      .backgroundColor($r('app.color.content_background'))
+      .padding({
+        top: this.safeTop
+      })
     }
   }
 }

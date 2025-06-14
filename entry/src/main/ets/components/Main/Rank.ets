@@ -13,6 +13,7 @@ export struct Rank {
   @State japanTopArtists:Array<topArtistsModel> = []
   @State topArtistsArea: Array<areaTopArtists> = []
   @State isLoading:boolean = true
+  @State areaRankItemHeight: number = -1
 
   //获取歌手排行榜
   getTopArtistsList = async () =>{
@@ -44,7 +45,7 @@ export struct Rank {
   @Builder topArtistsListBuilder(){
     Column({space:10}){
       Title({title:'歌手排行榜'})
-      List(){
+      List({space:10}){
         ForEach(this.topArtistsArea,(item:areaTopArtists)=>{
           ListItem(){
             Column({space:10}){
@@ -111,27 +112,28 @@ export struct Rank {
                   .width(20)
                   .fillColor($r('app.color.icon_svg_selected'))
               }
+              .margin({top:10})
               .justifyContent(FlexAlign.Center)
               .alignItems(VerticalAlign.Center)
               .width(BasicConstants.FULL_WIDTH)
             }
             .padding(10)
-            .backgroundColor($r('app.color.window_background'))
+            .backgroundColor($r('app.color.main_tab_background'))
             .borderRadius(5)
             .width('80%')
-            .margin({
-              right:10,
-            })
           }
+          .onAreaChange((oldArea: Area, newArea: Area) => {
+            if (this.areaRankItemHeight < newArea.height) {
+              this.areaRankItemHeight = newArea.height as number
+            }
+          })
         },(item:areaTopArtists)=>item.area)
       }
       .listDirection(Axis.Horizontal)
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.None)
       .fadingEdge(true)
-      .margin({
-        bottom:20
-      })
+      .height(this.areaRankItemHeight)
     }
     .margin({top:20})
   }
@@ -141,20 +143,24 @@ export struct Rank {
   }
 
   build() {
-    if(!this.isLoading){
-      Scroll(){
-        Column({space:20}){
-          //歌手排行榜
+    // Scroll(){
+      Column({space:30}){
+        if(!this.isLoading){
           this.topArtistsListBuilder()
+        }else{
+          Loading()
         }
       }
-      .margin({bottom:60})
+      //内容没铺满高度，所以要有下面的属性
+      .height(BasicConstants.FULL_HEIGHT)
       .width(BasicConstants.FULL_WIDTH)
-      .padding({
-        left:10
-      })
-    }else{
-      Loading()
+      .justifyContent(FlexAlign.Start)
+      .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
     }
-  }
+  //   .scrollBar(BarState.Off)
+  //   .edgeEffect(EdgeEffect.Fade)
+  //   .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
+  //   .height(BasicConstants.FULL_HEIGHT)
+  //   .width(BasicConstants.FULL_WIDTH)
+  // }
 }

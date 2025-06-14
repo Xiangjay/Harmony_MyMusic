@@ -1,5 +1,4 @@
 import { router } from '@kit.ArkUI'
-import log from '@open/log'
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { formatData, myDataMerge } from '../common/utils/CommonTools'
 import { Loading } from '../components/common/Loading'
@@ -8,6 +7,7 @@ import {
   commentsUser } from '../models/DataModels'
 import {getCommentsById} from '../common/apis/MusicApis'
 import { MyLazyDataSource } from '../common/utils/MyLazyDataSource'
+import { TopNavBar } from '../components/common/TopNavBar'
 
 @Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
   .fontSize(fontSize)
@@ -20,10 +20,16 @@ import { MyLazyDataSource } from '../common/utils/MyLazyDataSource'
 @Entry
 @Component
 struct Comments {
+  @StorageProp('safeTop') safeTop: number = 0;
   @State routerParams:commentsRouterParamsModel = new commentsRouterParamsModel()
   @State playList: PlayListModel = new PlayListModel()
   @State commentsList:Array<commentsModel> = []
-  @State isLoading:boolean = false
+  @State isLoading:boolean = true
+  //弹窗用
+  @State commentsListHeight: string = '0%'
+  @State commentsListOpacity: number = 0
+  private animationDuration:number = 300
+  //懒加载数据
   private commentsLazyData:MyLazyDataSource<commentsModel> = new MyLazyDataSource()
 
   getComments = async (type:string) => {
@@ -35,7 +41,11 @@ struct Comments {
     this.commentsList.forEach((comment:commentsModel)=>{
       comment.user = myDataMerge<commentsUser>(new commentsUser(),comment.user)
     })
+    //把数据放入懒加载数据类型中
     this.commentsLazyData.pushAllData(this.commentsList)
+    this.isLoading = false
+    this.commentsListHeight = '70%'
+    this.commentsListOpacity = 1
   }
 
   aboutToAppear(): void {
@@ -48,161 +58,141 @@ struct Comments {
     }
   }
 
-  @Builder coverBuilder() {
-    Stack({alignContent:Alignment.Top}){
-      Image(this.playList?.picUrl)
-        .width(BasicConstants.FULL_WIDTH)
-        .height(BasicConstants.FULL_HEIGHT)
-        .blur(1000)
-        .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
-      Column(){
-        //后退按钮
-        Row({space:5}) {
-          Image($r('app.media.icon_back'))
-            .width(30)
-            .height(30)
-            .fillColor(Color.White)
-            .onClick(() => {
-              router.back()
-            })
-          Row(){
-            Text('评论 ')
-              .fontColor(Color.White)
-              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-            Text(`(${this.playList.commentCount})`)
-              .fontColor(Color.White)
-              .opacity(0.6)
-              .fontSize(BasicConstants.FONT_SIZE_SMALL)
-          }
-        }
-        .justifyContent(FlexAlign.Start)
-        .width(BasicConstants.FULL_WIDTH)
-        .margin({bottom:20})
-        Row() {
-          Column() {
-            Image(this.playList.picUrl)
-              .borderRadius(5)
-              .width(BasicConstants.FULL_WIDTH)
-              .height(120)
-          }
-          .width(120)
-          Column() {
-            Text(this.playList.name)
-              .coverText(BasicConstants.FONT_SIZE_LARGE)
-            Text(this.playList.tags!.toString() || formatData(this.playList.publishTime!) + ' 发行')
-              .coverText(BasicConstants.FONT_SIZE_SMALL)
-              .opacity(0.6)
-            Text(this.playList.description)
-              .coverText()
-              .opacity(0.8)
-          }
-          .padding({
-            left: 10,
-            top: 5,
-            bottom: 5
-          })
-          .justifyContent(FlexAlign.SpaceBetween)
-          .layoutWeight(1)
+  @Builder coverBuilder(){
+    //封面
+    Row() {
+      Column() {
+        Image(this.playList.picUrl)
+          .borderRadius(5)
+          .width(BasicConstants.FULL_WIDTH)
           .height(120)
-        }
-        .width(BasicConstants.FULL_WIDTH)
+      }
+      .width(120)
+      Column() {
+        Text(this.playList.name)
+          .coverText(BasicConstants.FONT_SIZE_LARGE)
+        Text(this.playList.tags!.toString() || formatData(this.playList.publishTime!) + ' 发行')
+          .coverText(BasicConstants.FONT_SIZE_SMALL)
+          .opacity(0.6)
+        Text(this.playList.description)
+          .coverText()
+          .opacity(0.8)
       }
       .padding({
         left: 10,
-        right: 10
+        top: 5,
+        bottom: 5
       })
-    }
-    .width(BasicConstants.FULL_WIDTH)
-    .height('30%')
-  }
-  @Builder commentsBuilder(item:commentsModel){
-    Row({space:10}){
-      Column(){
-        Image(item.user.avatarUrl)
-          .width(50)
-          .height(50)
-          .borderRadius(50)
-      }
-      Column({space:10}){
-        Row(){
-          Column(){
-            Text(item.user.nickname)
-              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-              .fontColor($r('app.color.text_default'))
-            Text(formatData(item.time))
-              .fontSize(BasicConstants.FONT_SIZE_SMALL)
-              .fontColor($r('app.color.text_default'))
-              .opacity(0.6)
-          }
-          .width('60%')
-          .alignItems(HorizontalAlign.Start)
-          Row({space:5}){
-            Text(item.likedCount.toString())
-              .fontSize(BasicConstants.FONT_SIZE_SMALL)
-              .fontColor($r('app.color.text_default'))
-              .opacity(0.6)
-            Image($r('app.media.icon_dianzan'))
-              .width(20)
-              .fillColor($r('app.color.icon_svg_selected'))
-          }
-        }
-        .width(BasicConstants.FULL_WIDTH)
-        .justifyContent(FlexAlign.SpaceBetween)
-        Row(){
-          Text(item.content)
-            .fontColor($r('app.color.text_default'))
-            .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-        }
-        .width(BasicConstants.FULL_WIDTH)
-        .justifyContent(FlexAlign.Start)
-      }
+      .justifyContent(FlexAlign.SpaceBetween)
       .layoutWeight(1)
+      .height(120)
     }
-    .padding({
-      top:10,
-      bottom:10
-    })
     .alignItems(VerticalAlign.Top)
     .width(BasicConstants.FULL_WIDTH)
-    .border({
-      width: { bottom: 1 },
-      color: '#12ec5c87'
-    })
   }
-  build() {
+  @Builder commentsListBuilder(){
     Column(){
-      if (this.isLoading) {
-        Loading()
-      } else{
-        Column({ space: 10 }){
-          //封面
-          this.coverBuilder()
-          //评论内容
-
-          List(){
-            LazyForEach(this.commentsLazyData,(item:commentsModel)=>{
-              ListItem(){
-                this.commentsBuilder(item)
+      List(){
+        LazyForEach(this.commentsLazyData,(item:commentsModel)=>{
+          ListItem(){
+            Row({space:10}){
+              Column(){
+                Image(item.user.avatarUrl)
+                  .width(50)
+                  .height(50)
+                  .borderRadius(50)
               }
-            },(item:commentsModel)=>item.commentId.toString())
+              Column({space:10}){
+                Row(){
+                  Column(){
+                    Text(item.user.nickname)
+                      .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                      .fontColor($r('app.color.text_default'))
+                    Text(formatData(item.time))
+                      .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                      .fontColor($r('app.color.text_default'))
+                      .opacity(0.6)
+                  }
+                  .width('60%')
+                  .alignItems(HorizontalAlign.Start)
+                  Row({space:5}){
+                    Text(item.likedCount.toString())
+                      .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                      .fontColor($r('app.color.text_default'))
+                      .opacity(0.6)
+                    Image($r('app.media.icon_dianzan'))
+                      .width(20)
+                      .fillColor($r('app.color.icon_svg_selected'))
+                  }
+                }
+                .width(BasicConstants.FULL_WIDTH)
+                .justifyContent(FlexAlign.SpaceBetween)
+                Row(){
+                  Text(item.content)
+                    .fontColor($r('app.color.text_default'))
+                    .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                }
+                .width(BasicConstants.FULL_WIDTH)
+                .justifyContent(FlexAlign.Start)
+              }
+              .layoutWeight(1)
+            }
+            .padding(10)
+            .alignItems(VerticalAlign.Top)
+            .width(BasicConstants.FULL_WIDTH)
           }
-          .scrollBar(BarState.Off)
-          .edgeEffect(EdgeEffect.None)
-          .fadingEdge(true)
+          .border({
+            width: { bottom: 1 },
+            color:$r('app.color.list_divider')
+          })
+        },(item:commentsModel)=>item.commentId.toString())
+      }
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
+      .fadingEdge(true)
+      .layoutWeight(1)
+    }
+    .height(this.commentsListHeight)
+    .opacity(this.commentsListOpacity)
+    .padding({
+      left:10,
+      right:10
+    })
+    .animation({
+      duration:this.animationDuration,
+    })
+    .width(BasicConstants.FULL_WIDTH)
+    .backgroundColor($r('app.color.main_tab_background'))
+  }
+
+  build() {
+    Stack({ alignContent: Alignment.Bottom }){
+      Stack({ alignContent: Alignment.Top }){
+        Image(this.playList?.picUrl)
+          .width(BasicConstants.FULL_WIDTH)
+          .height(BasicConstants.FULL_HEIGHT)
+          .blur(1000)
+        if (this.isLoading) {
+          Loading()
+        } else {
+          Column({ space: 10 }) {
+            //后退按钮
+            TopNavBar({title:'评论',color:'#ffffff'})
+            //封面
+            this.coverBuilder()
+          }
           .padding({
-            left:10,
-            right:10
+            top:this.safeTop,
+            left: 10,
+            right: 10
           })
           .width(BasicConstants.FULL_WIDTH)
-          // .margin({bottom:20})
-          .layoutWeight(1)
+          .height('30%')
         }
       }
+      this.commentsListBuilder()
     }
-    .justifyContent(this.isLoading?FlexAlign.Center:FlexAlign.Start)
-    .width(BasicConstants.FULL_WIDTH)
     .height(BasicConstants.FULL_HEIGHT)
-    .backgroundColor($r('app.color.content_background'))
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
+    .width(BasicConstants.FULL_WIDTH)
   }
 }

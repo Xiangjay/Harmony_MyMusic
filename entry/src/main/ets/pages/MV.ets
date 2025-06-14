@@ -4,12 +4,12 @@ import { MVModel } from "../models/DataModels"
 import { Loading } from "../components/common/Loading"
 import {Title} from '../components/common/Title'
 import { getAllMV } from "../common/apis/MVApis"
-import log from "@open/log"
-import { router } from "@kit.ArkUI"
+import { TopNavBar } from "../components/common/TopNavBar"
 
 @Entry
 @Component
 struct MV {
+  @StorageProp('safeTop') safeTop: number = 0;
   @State isLoading:boolean = true
   @State chinaMVs:Array<MVModel> = []
   @State europeMVs:Array<MVModel> = []
@@ -53,16 +53,15 @@ struct MV {
   }
 
   @Builder mvListBuilder(title:string,mvList:Array<MVModel>){
-    Column(){
+    Column({space:10}){
       Title({title:title})
-      List(){
+      List({space:10}){
         ForEach(mvList,(mv:MVModel)=>{
           ListItem(){
             RelativeContainer(){
               Image(mv.cover)
                 .width(BasicConstants.FULL_WIDTH)
                 .height(200)
-                .borderRadius(10)
               Text(mv.name)
                 .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                 .fontColor($r('app.color.label_text'))
@@ -98,19 +97,21 @@ struct MV {
                   'right': { 'anchor': '__container__', 'align': HorizontalAlign.End }
                 })
             }
-            .margin({right:10})
             .borderRadius(10)
+            .clip(true)
+            .width('80%')
           }
         },(mv:MVModel)=>mv.id.toString())
       }
       .listDirection(Axis.Horizontal)
       .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.None)
+      .edgeEffect(EdgeEffect.Spring)
+      .fadingEdge(true)
       .width(BasicConstants.FULL_WIDTH)
       .height(200)
-      .margin({top:10})
     }
   }
+
   aboutToAppear(): void {
     this.getAllMVList()
   }
@@ -118,50 +119,33 @@ struct MV {
   build() {
     Column(){
       if(!this.isLoading){
-        Row(){
-          Row({space:5}) {
-            Image($r('app.media.icon_back'))
-              .width(30)
-              .height(30)
-              .fillColor($r('app.color.back_icon'))
-              .onClick(() => {
-                router.back()
-              })
-            Text('MV')
-              .fontColor($r('app.color.back_icon'))
-              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-              .fontWeight(FontWeight.Bold)
-          }
-          .justifyContent(FlexAlign.Start)
-          .width(BasicConstants.FULL_WIDTH)
-        }
-        .padding({
-          left:10
-        })
-        .margin({bottom:20})
+        TopNavBar({title:'MV'})
         Scroll(){
-          Column({space:20}){
+          Column({space:30}){
             this.mvListBuilder('华语',this.chinaMVs)
             this.mvListBuilder('日韩',this.japanMVs)
             this.mvListBuilder('欧美',this.europeMVs)
             this.mvListBuilder('其他',this.otherMVs)
           }
-          .padding({
-            left:10,
-          })
           .width(BasicConstants.FULL_WIDTH)
         }
         .layoutWeight(1)
         .scrollBar(BarState.Off)
-        .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
+        .edgeEffect(EdgeEffect.Fade)
+        .margin({
+          top:20,
+          bottom:20
+        })
       }else {
         Loading()
       }
     }
-    .justifyContent(this.isLoading?FlexAlign.Center:FlexAlign.Start)
-    .width(BasicConstants.FULL_WIDTH)
     .height(BasicConstants.FULL_HEIGHT)
+    .width(BasicConstants.FULL_WIDTH)
     .backgroundColor($r('app.color.content_background'))
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
+    .padding({
+      top: this.safeTop,
+      left:10
+    })
   }
 }
