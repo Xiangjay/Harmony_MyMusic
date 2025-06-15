@@ -3,7 +3,6 @@ import {BasicConstants} from '../common/constants/BasicConstants'
 import { Main } from '../components/Main';
 import { My } from '../components/My';
 import { router } from '@kit.ArkUI';
-import log from '@open/log';
 
 @Entry
 @Component

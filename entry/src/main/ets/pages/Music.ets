@@ -9,9 +9,7 @@ import {
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
 import { countTransform, formatData, myDataMerge, SpecificKey} from "../common/utils/CommonTools";
-import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType,
-  newestAlbum,AlbumDynamic,
-  commentsRouterParamsModel} from '../models/DataModels'
+import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType, commentsRouterParamsModel} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 import { TopNavBar } from "../components/common/TopNavBar";
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
@@ -111,14 +109,14 @@ struct Music {
   //通过传过来的专辑ID获取专辑详细
   getAlbumDetail = async (id:number) =>{
     //先拿专辑基本信息
-    const resAlbum = await getAlbumDetailById<newestAlbum,null>(id)
+    const resAlbum = await getAlbumDetailById<PlayListModel,null>(id)
     this.playList = myDataMerge<PlayListModel>(new PlayListModel(),resAlbum.album)
     //处理下格式，不然页面渲染不出来
     if(this.playList.description.indexOf('\n') > -1){
       this.playList.description = this.playList.description.replaceAll('\n','')
     }
     //获取专辑动态信息（评论数，分享数）
-    const resDynamic = await getAlbumDynamicById<AlbumDynamic,null>(id)
+    const resDynamic = await getAlbumDynamicById<PlayListModel,null>(id)
     this.playList = myDataMerge<PlayListModel>(this.playList,resDynamic)
     //再拿专辑里的歌曲
     const resSongs = await getAlbumDetailById<Array<SongModel>,null>(id)

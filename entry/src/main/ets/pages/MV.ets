@@ -5,6 +5,7 @@ import { Loading } from "../components/common/Loading"
 import {Title} from '../components/common/Title'
 import { getAllMV } from "../common/apis/MVApis"
 import { TopNavBar } from "../components/common/TopNavBar"
+import { router } from "@kit.ArkUI"
 
 @Entry
 @Component
@@ -100,6 +101,14 @@ struct MV {
             .borderRadius(10)
             .clip(true)
             .width('80%')
+            .onClick(()=>{
+              router.pushUrl({
+                url:'pages/PlayMV',
+                params:{
+                  param: mv.id
+                }
+              })
+            })
           }
         },(mv:MVModel)=>mv.id.toString())
       }

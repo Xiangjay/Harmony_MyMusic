@@ -31,8 +31,7 @@ export function getNewestAlbumsList<T,K>(){
 
 //获取排行榜tab里的歌手排行榜
 export function getTopArtistList<T,K>(type:number = 1){
-  const params = `?type=${type}`
-  return myHttp<T,K>('/toplist/artist' + params)
+  return myHttp<T,K>(`/toplist/artist?type=${type}`)
 }
 
 //获取最新tab里的swiper

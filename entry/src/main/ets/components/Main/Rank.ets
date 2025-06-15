@@ -1,9 +1,8 @@
 import { getTopArtistList } from "../../common/apis/HomeApis"
 import { BasicConstants } from "../../common/constants/BasicConstants"
 import { countTransform, myDataMerge } from "../../common/utils/CommonTools"
-import { areaTopArtists, topArtistsList } from "../../../../backup/DataModel"
 import {Title} from '../common/Title'
-import {topArtistsModel} from '../../models/DataModels'
+import {topArtistsModel,responseTopArtistsList,areaTopArtists} from '../../models/DataModels'
 import { Loading } from "../common/Loading"
 
 @Component
@@ -17,19 +16,19 @@ export struct Rank {
 
   //获取歌手排行榜
   getTopArtistsList = async () =>{
-    const chinaTopArtists = await getTopArtistList<topArtistsList,null>()
+    const chinaTopArtists = await getTopArtistList<responseTopArtistsList,null>()
     //默认展示前五名数据
     chinaTopArtists.list.artists.slice(0,5).forEach(item=>{
       this.chinaTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
-    const europeTopArtists = await getTopArtistList<topArtistsList,null>(2)
+    const europeTopArtists = await getTopArtistList<responseTopArtistsList,null>(2)
     europeTopArtists.list.artists.slice(0,5).forEach(item=>{
       this.europeTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     this.topArtistsArea.push({area:'华语榜',artists:this.chinaTopArtists})
     this.topArtistsArea.push({area:'欧美榜',artists:this.europeTopArtists})
     //由于日本和韩国的接口是分开的，而我这里想合到一起，所以用promise.all一起获取数据
-    const responseResult = await Promise.all([getTopArtistList<topArtistsList,null>(3),getTopArtistList<topArtistsList,null>(4)])
+    const responseResult = await Promise.all([getTopArtistList<responseTopArtistsList,null>(3),getTopArtistList<responseTopArtistsList,null>(4)])
     //合并数据并
     const japanTopArtists = responseResult[0].list.artists.concat(responseResult[1].list.artists)
     japanTopArtists.sort((a,b)=>{

@@ -4,14 +4,16 @@ import {getRecommendSongList,getRecommendMVList, getRecommendNewSongs,
 import { countTransform,myDataMerge, SpecificKey } from '../../common/utils/CommonTools'
 import {Title} from '../common/Title'
 import { router } from '@kit.ArkUI'
-import {PlayListModel,recommendMVList,SongModel,recommendDjProgram,musicRouterParamsModel,
-  playListType} from '../../models/DataModels'
+import {PlayListModel,SongModel,recommendDjProgram,musicRouterParamsModel,
+  playListType,
+  MVModel,
+  mvRouterParamsModel} from '../../models/DataModels'
 import { Loading } from '../common/Loading'
 
 @Component
 export struct Recommend {
   @State recommendSongList:Array<PlayListModel> = []
-  @State recommendMVList:Array<recommendMVList> = []
+  @State recommendMVList:Array<MVModel> = []
   @State recommendNewSongs:Array<SongModel> = []
   @State recommendDjPrograms:Array<recommendDjProgram> = []
   @State songListItemHeight: number = -1
@@ -29,9 +31,9 @@ export struct Recommend {
   }
   //获取推荐MV
   getRecommendMVList = async () =>{
-    const res = await getRecommendMVList<Array<recommendMVList>,null>()
+    const res = await getRecommendMVList<Array<MVModel>,null>()
     res.result.forEach(item=>{
-      this.recommendMVList.push(myDataMerge<recommendMVList>(new recommendMVList(),item))
+      this.recommendMVList.push(myDataMerge<MVModel>(new MVModel(),item))
     })
     this.isLoading = false
   }
@@ -134,7 +136,7 @@ export struct Recommend {
     Column({space:10}){
       Title({title:'精选MV'})
       Swiper(){
-        ForEach(this.recommendMVList,(item:recommendMVList)=>{
+        ForEach(this.recommendMVList,(item:MVModel,index:number)=>{
           Stack({alignContent:Alignment.Bottom}){
             Image(item.picUrl)
               .width(BasicConstants.FULL_WIDTH)
@@ -151,14 +153,19 @@ export struct Recommend {
           .borderRadius(10)
           .clip(true)
           .onClick(()=>{
+            const param:mvRouterParamsModel = {
+              id: item.id,
+              index: index,
+              mvList: this.recommendMVList
+            }
             router.pushUrl({
               url:'pages/PlayMV',
               params: {
-                param:item.id
+                param: param
               }
             })
           })
-        },(item:recommendMVList)=>item.id.toString())
+        },(item:MVModel)=>item.id.toString())
       }
       .autoPlay(true)
       .indicator(false)

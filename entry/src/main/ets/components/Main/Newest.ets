@@ -1,7 +1,7 @@
 import { getMusicBanner, getNewestAlbumsList, getNewestMVList } from '../../common/apis/HomeApis'
 import { BasicConstants } from '../../common/constants/BasicConstants'
 import {Title} from '../common/Title'
-import {banner,newestAlbum,newestMV,musicRouterParamsModel,
+import {banner,PlayListModel,MVModel,musicRouterParamsModel,
   playListType} from '../../models/DataModels'
 import { myDataMerge } from '../../common/utils/CommonTools'
 import { Loading } from '../common/Loading'
@@ -10,8 +10,8 @@ import { router } from '@kit.ArkUI'
 @Component
 export struct Newest {
   @State banners:Array<banner> = []
-  @State newestAlbumsList:Array<newestAlbum> = []
-  @State newestMVList:Array<newestMV> = []
+  @State newestAlbumsList:Array<PlayListModel> = []
+  @State newestMVList:Array<MVModel> = []
   @State isLoading:boolean = true
 
   getBanner = async () => {
@@ -21,17 +21,17 @@ export struct Newest {
   }
   //获取最新专辑
   getNewestAlbumsList = async () =>{
-    const res = await getNewestAlbumsList<Array<newestAlbum>,null>()
+    const res = await getNewestAlbumsList<Array<PlayListModel>,null>()
     res.albums.forEach(item=>{
-      this.newestAlbumsList.push(myDataMerge<newestAlbum>(new newestAlbum(),item))
+      this.newestAlbumsList.push(myDataMerge<PlayListModel>(new PlayListModel(),item))
     })
     this.isLoading = false
   }
   //获取最新MV
   getNewestMVList = async () =>{
-    const res = await getNewestMVList<Array<newestMV>,null>()
+    const res = await getNewestMVList<Array<MVModel>,null>()
     res.data.forEach(item=>{
-      this.newestMVList.push(myDataMerge<newestMV>(new newestMV(),item))
+      this.newestMVList.push(myDataMerge<MVModel>(new MVModel(),item))
     })
     this.isLoading = false
   }
@@ -86,7 +86,7 @@ export struct Newest {
     Column({space:10}){
       Title({title:'最新专辑'})
       List({space:10}){
-        ForEach(this.newestAlbumsList,(item:newestAlbum)=>{
+        ForEach(this.newestAlbumsList,(item:PlayListModel)=>{
           ListItem(){
             RelativeContainer(){
               Image(item.picUrl)
@@ -134,7 +134,7 @@ export struct Newest {
             .clip(true)
             .borderRadius(10)
           }
-        },(item:newestAlbum)=>item.id.toString())
+        },(item:PlayListModel)=>item.id.toString())
       }
       .listDirection(Axis.Horizontal)
       .scrollBar(BarState.Off)
@@ -149,7 +149,7 @@ export struct Newest {
     Column({space:10}){
       Title({title:'最新MV'})
       Swiper(){
-        ForEach(this.newestMVList,(item:newestMV)=>{
+        ForEach(this.newestMVList,(item:MVModel)=>{
           RelativeContainer(){
             Image(item.cover)
               .width(BasicConstants.FULL_WIDTH)
@@ -182,7 +182,7 @@ export struct Newest {
           .clip(true)
           .borderRadius(10)
           .height(200)
-        },(item:newestMV)=>item.id.toString())
+        },(item:MVModel)=>item.id.toString())
       }
       .autoPlay(true)
       .indicator(false)

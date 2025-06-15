@@ -14,6 +14,12 @@ export class commentsRouterParamsModel{
   type:playListType = playListType.playList
   detail:PlayListModel = new PlayListModel()
 }
+export class mvRouterParamsModel{
+  id:number = 0
+  index:number = 0
+  mvList:Array<MVModel> = []
+}
+
 export enum playListType{
   playList = 0,
   album = 1,
@@ -30,11 +36,11 @@ export class PlayListModel{
   playCount:number = 0
   trackCount:number = 0
   description:string = ''
-  tags?:string[] = []
+  tags:string[] = []
   commentCount:number = 0
   shareCount:number = 0
-  artist?:Artist = new Artist() //专辑用
-  publishTime?:number = 0 //专辑用
+  artist:Artist = new Artist() //专辑用
+  publishTime:number = 0 //专辑用
 }
 
 //程序需要的歌曲数据类型
@@ -66,19 +72,13 @@ export enum PlayMode{
 export class Artist{
   id:number = 0
   name:string = ''
+  avatar:string = ''
 }
 //专辑
 export class Album{
   id:number = 0
   name:string = ''
   picUrl:string = ''
-}
-
-//专辑信息，拿到专辑的分享数和评论数
-export class AlbumDynamic{
-  commentCount:number = 0
-  shareCount:number = 0
-  subCount:number = 0
 }
 
 
@@ -88,16 +88,6 @@ export class AlbumDynamic{
 //默认搜索关键词
 export interface SearchKeyWordInterface {
   showKeyword: string;
-}
-//精选MV
-export class recommendMVList {
-  id:number = 0
-  type:number = 0
-  picUrl:string = ''
-  playCount:number = 0
-  artistName:string = ''
-  artistId:number = 0
-  copywriter:string = ''
 }
 //推荐电台
 export class recommendDjProgram{
@@ -116,24 +106,6 @@ export interface banner{
   pic:string,
   typeTitle:string
 }
-//最新专辑
-export class newestAlbum{
-  name:string = ''
-  id: number = 0
-  type: string = ''
-  size: number = 0
-  picUrl:string = ''
-  publishTime:number = 0
-  artist:Artist = new Artist()
-}
-//最新MV
-export class newestMV{
-  name:string = ''
-  id: number = 0
-  playCount:number = 0
-  cover:string = ''
-  artistName:string = ''
-}
 
 /*
  * 排行榜tab
@@ -147,8 +119,14 @@ export class topArtistsModel{
   musicSize: number = 0
   score:number = 0
 }
-export interface topArtistsList{
-  artists:Array<topArtistsModel>
+//后台返回的数据类型
+export interface responseTopArtistsList{
+  artists: Array<topArtistsModel>
+}
+//排行榜tab里页面需要展示的的歌手排行榜数据类型
+export interface areaTopArtists{
+  area:string,
+  artists: Array<topArtistsModel>
 }
 
 //评论数据
@@ -169,12 +147,31 @@ export class commentsUser{
 /*
  * MV tab
 */
+@Observed
 export class MVModel{
   id:number = 0
   name:string = ''
   cover:string = ''
   playCount:number = 0
   briefDesc:string = ''
-  artistName:string = ''
   duration:number = 0
+  artistName:string = ''
+  artistId:number = 0
+  artistAvatar:string = ''
+  shareCount:number = 0
+  commentCount:number = 0
+  publishTime:string = ''
+  likedCount:number = 0
+  liked:boolean = false
+  url:string = ''
+  picUrl:string = ''  //推荐页面用
+  copywriter:string = ''  //推荐页面用
+  //以下为播放页面用
+  isPlaying:boolean = false //是否在播放
+  controller?:VideoController = new VideoController() //视频播放的控制器
+  showPlayButton:boolean = false  //是否现在视频中间的播放按钮，播放按钮要单独控制，不要跟isPlaying绑定
+  pauseTime:number = 0
+}
+export interface responseArtistModel{
+  artist:Artist
 }

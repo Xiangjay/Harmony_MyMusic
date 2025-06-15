@@ -1,126 +1,185 @@
-import { router } from '@kit.ArkUI'
+import { router, window } from '@kit.ArkUI'
 import log from '@open/log'
-import { routerParams } from '../models/DataModels'
+import { routerParams,MVModel, mvRouterParamsModel,responseArtistModel } from '../models/DataModels'
 import { BasicConstants } from '../common/constants/BasicConstants'
+import { TopNavBar } from '../components/common/TopNavBar'
+import { getMvDetailById, getMvInfoById, getMvUrlById } from '../common/apis/MVApis'
+import { countTransform, myDataMerge } from '../common/utils/CommonTools'
+import { Loading } from '../components/common/Loading'
+import { getSingerDetailById } from '../common/apis/MusicApis'
+import {MvContent} from '../components/MV/MvContent'
+
+@Extend(Text) function infoText(size:number = BasicConstants.FONT_SIZE_NORMAL,color:ResourceColor = Color.White) {
+  .fontSize(size)
+  .fontColor(color)
+}
+
+class testMV{
+  url:string = ''
+  pic:string = ''
+}
 
 @Entry
 @Component
 struct PlayMV {
-  private controller: VideoController = new VideoController()
-  @State mvId:number = 0
-  @State data:string[] = []
+  @State routerParams:mvRouterParamsModel = new mvRouterParamsModel()
   @StorageProp('safeTop') safeTop: number = 0;
-  @StorageProp('safeBottom') safeBottom: number = 0;
+  windowClass: window.Window = AppStorage.get("windowClass") as window.Window;	//拿到全局window对象
+  private swiperController: SwiperController = new SwiperController()
+  @State isLoading:boolean = true
+  @State mvList:MVModel[] = []
+  @State currentMvId:number = 0
+  @State currentPlayIndex:number = 0
+  @State currentMV:MVModel = new MVModel()
 
-  aboutToAppear(): void {
-    for (let index = 0; index < 100; index++) {
-      this.data.push(index.toString())
-    }
-    // this.mvId = (router.getParams() as routerParams<number>).param
-    // log.info(this.mvId)
+  getMVDetail = async (mvId:number) =>{
+    let mv:MVModel = new MVModel()
+    const mvDetail = await getMvDetailById<MVModel,null>(mvId)
+    mv = myDataMerge<MVModel>(mv,mvDetail.data)
+    const mvInfo = await getMvInfoById<MVModel,null>(mvId)
+    mv = myDataMerge<MVModel>(mv,mvInfo)
+    const mvUrl = await getMvUrlById<MVModel,null>(mvId)
+    mv = myDataMerge<MVModel>(mv,mvUrl.data)
+    const avatar = await getSingerDetailById<responseArtistModel,null>(mv.artistId)
+    mv.artistAvatar = avatar.data.artist.avatar
+    mv.controller = new VideoController()
+    this.mvList.push(mv)
   }
 
-  // build() {
-  //   Column() {
-  //     Stack({alignContent:Alignment.Top}){
-  //       Row(){
-  //         Row({space:5}) {
-  //           Image($r('app.media.icon_back'))
-  //             .width(30)
-  //             .height(30)
-  //             .fillColor(Color.White)
-  //             .onClick(() => {
-  //               router.back()
-  //             })
-  //         }
-  //         .justifyContent(FlexAlign.Start)
-  //         .width(BasicConstants.FULL_WIDTH)
-  //       }
-  //       .padding({
-  //         left:10
-  //       })
-  //       Swiper() {
-  //         ForEach(this.data, (item: string, index: number) => {
-  //           Stack({ alignContent: Alignment.BottomEnd }) {
-  //             Column(){
-  //               Text(item)
-  //                 .fontColor(Color.Blue)
-  //             }
-  //             .justifyContent(FlexAlign.Center)
-  //             .backgroundColor(Color.White)
-  //             .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
-  //             .width('100%')
-  //             .height('100%')
-  //           }
-  //         })
-  //       }
-  //       // .index(videoIndex)
-  //       .autoPlay(false)
-  //       .indicator(false)
-  //       .loop(true)
-  //       .duration(200)
-  //       .vertical(true)
-  //       .width('100%')
-  //       .height('100%')
-  //       .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
-  //     }
-  //     // Video({
-  //     //   src: 'http://vodkgeyttp8.vod.126.net/cloudmusic/MjQ3NDQ3MjUw/89a6a279dc2acfcd068b45ce72b1f560/533e4183a709699d566180ed0cd9abe9.mp4?wsSecret=f8826239faf247408b689934cb4577f0&wsTime=1749808473',
-  //     //   previewUri: 'http://p1.music.126.net/ijUg7s_2S8GMbTNsYiepJA==/18676304511774727.jpg',
-  //     //   controller: this.controller
-  //     // })
-  //   }
-  //   .width(BasicConstants.FULL_WIDTH)
-  //   .height(BasicConstants.FULL_HEIGHT)
-  //   .backgroundColor(Color.Black)
-  //   .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP,SafeAreaEdge.BOTTOM])
-  // }
-  build() {
-    Column(){
-      Text('123123')
-        .fontColor(Color.Black)
+  getMvList = async (list:Array<MVModel>)=>{
+    for (let i = 0; i < list.length; i++) {
+      //对每一个MV发送请求获取数据
+      await this.getMVDetail(list[i].id);
+      //请求都发送完了
+      if(i === list.length -1){
+        this.mvList[this.currentPlayIndex].isPlaying = true
+        this.isLoading = false
+      }
     }
-    .justifyContent(FlexAlign.End)
-    .backgroundColor(Color.White)
-    .width('100%')
-    .height('100%')
-    .padding({
-      top:this.safeTop,
-      // bottom:this.safeBottom
+  }
+
+  aboutToAppear(): void {
+    this.windowClass.setSpecificSystemBarEnabled('navigationIndicator', true)  //底部导航条不隐藏
+    try {
+      this.routerParams = (router.getParams() as routerParams<mvRouterParamsModel>).param
+      this.currentMvId = this.routerParams.id
+      this.currentPlayIndex = this.routerParams.index
+      this.getMvList(this.routerParams.mvList)
+    }catch {
+
+    }
+  }
+
+  @Builder contentBuilder(){
+    Swiper(this.swiperController){
+      ForEach(this.mvList,(mv:MVModel)=>{
+        MvContent({ mv:mv })
+      },(mv:MVModel)=>mv.id.toString())
+    }
+    .indicator(false)
+    .loop(true)
+    .vertical(true)
+    .width(BasicConstants.FULL_WIDTH)
+    .height(BasicConstants.FULL_HEIGHT)
+    .index(this.currentPlayIndex)
+    .onChange((index: number) => {
+      this.currentPlayIndex = index;
+      this.mvList.forEach((mv:MVModel,mvIndex:number)=>{
+        mv.showPlayButton = false
+        if(mvIndex === index){
+          mv.isPlaying = true
+        }else {
+          mv.isPlaying = false
+        }
+      })
     })
-    // Scroll() {
-    //   Column() {
-    //     Swiper() {
-    //       ForEach(this.data, (item: string, index: number) => {
-    //         Column() {
-    //             // Video({
-    //             //   src: 'http://vodkgeyttp8.vod.126.net/cloudmusic/MjQ3NDQ3MjUw/89a6a279dc2acfcd068b45ce72b1f560/533e4183a709699d566180ed0cd9abe9.mp4?wsSecret=f8826239faf247408b689934cb4577f0&wsTime=1749808473',
-    //             //   previewUri: 'http://p1.music.126.net/ijUg7s_2S8GMbTNsYiepJA==/18676304511774727.jpg',
-    //             //   controller: this.controller
-    //             // })
-    //         }
-    //         .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
-    //         .width('100%')
-    //         .height('100%')
-    //         .backgroundColor(Color.Pink)
-    //       })
-    //     }
-    //     .itemSpace(0)
-    //     .vertical(true)
-    //     .autoPlay(true)
-    //     .loop(true)
-    //     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
-    //     .clip(false)
-    //   }
-    //   .clip(false)
-    //   .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
-    //   .width('100%')
-    //   .height('100%')
-    // }
-    // .edgeEffect(EdgeEffect.None)
-    // .clip(false)
-    // .width("100%")
-    // .height("100%")
-    // .backgroundColor(Color.Black)
+  }
+  @Builder rightButtonsBuilder(mv:MVModel){
+    Column({space:20}){
+      Column({space:5}){
+        Image($r('app.media.icon_dianzan'))
+          .width(30)
+          .fillColor(Color.White)
+        Text(countTransform(mv.playCount))
+          .infoText(BasicConstants.FONT_SIZE_SMALL)
+      }
+      Column({space:5}){
+        Image($r('app.media.icon_comment'))
+          .width(30)
+          .fillColor(Color.White)
+        Text(countTransform(mv.commentCount))
+          .infoText(BasicConstants.FONT_SIZE_SMALL)
+      }
+      Column({space:5}){
+        Image($r('app.media.icon_share'))
+          .width(30)
+          .fillColor(Color.White)
+        Text(countTransform(mv.shareCount))
+          .infoText(BasicConstants.FONT_SIZE_SMALL)
+      }
+    }
+    .padding({right:10})
+    .alignRules({
+      'top': { 'anchor': '__container__', 'align': VerticalAlign.Center },
+      'right': { 'anchor': '__container__', 'align': HorizontalAlign.End }
+    })
+  }
+  @Builder bottomInfoBuilder(mv:MVModel){
+    Column({space:10}){
+      Row({space:5}){
+        Image(mv.artistAvatar)
+          .width(40)
+          .borderRadius(50)
+        Text(mv.artistName)
+          .infoText()
+      }
+      .width(BasicConstants.FULL_WIDTH)
+      .alignItems(VerticalAlign.Center)
+      Row({space:5}){
+        Row(){
+          Text('MV')
+            .infoText()
+        }
+        .padding(5)
+        .backgroundColor('#3a3e41')
+        Text(mv.name)
+          .infoText()
+      }
+      .width(BasicConstants.FULL_WIDTH)
+      .alignItems(VerticalAlign.Center)
+      Text(mv.publishTime)
+        .infoText(BasicConstants.FONT_SIZE_SMALL,'#a9a9a9')
+        .width(BasicConstants.FULL_WIDTH)
+    }
+    .padding({
+      left:10,
+      bottom:10
+    })
+    .width('80%')
+    .alignRules({
+      'bottom': { 'anchor': '__container__', 'align': VerticalAlign.Bottom },
+      'left': { 'anchor': '__container__', 'align': HorizontalAlign.Start }
+    })
+  }
+
+  build() {
+    if (!this.isLoading){
+      Stack({alignContent:Alignment.Top}){
+        this.contentBuilder()
+        //返回按钮
+        Row(){
+          TopNavBar({color:'#ffffff'})
+        }
+        .padding({
+          top:this.safeTop,
+          left: 10
+        })
+      }
+      .width(BasicConstants.FULL_WIDTH)
+      .height(BasicConstants.FULL_HEIGHT)
+      .backgroundColor(Color.Black)
+    } else {
+      Loading()
+    }
   }
 }
