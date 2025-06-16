@@ -200,7 +200,13 @@ export struct Newest {
           //最新MV区域
           this.newestMVBuilder()
         }else {
-          Loading()
+          Column(){
+            Loading()
+          }
+          .height(BasicConstants.FULL_HEIGHT)
+          .width(BasicConstants.FULL_WIDTH)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
         }
       }
       //内容没铺满高度，所以要有下面的属性

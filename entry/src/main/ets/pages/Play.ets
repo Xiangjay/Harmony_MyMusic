@@ -1,4 +1,3 @@
-// import { playListModel, songModel,playMode} from '../../../backup/DataModel'
 import { router } from '@kit.ArkUI'
 import {getSingerDetailById} from '../common/apis/MusicApis'
 import {responseSinger} from '../../../backup/DataModel'

@@ -15,3 +15,7 @@ export function getMvInfoById<T,K>(mvId:number){
 export function getMvUrlById<T,K>(mvId:number){
   return myHttp<T,K>(`/mv/url?id=${mvId}`)
 }
+//通过MVid获取MV播评论
+export function getMvCommentsById<T,K>(mvId:number,offsetNum:number,pageSize:number = 20){
+  return myHttp<T,K>(`/comment/mv?id=${mvId}&offset=${offsetNum}&limit=${pageSize}`)
+}

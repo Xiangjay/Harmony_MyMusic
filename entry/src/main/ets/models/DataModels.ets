@@ -1,3 +1,5 @@
+import { MyLazyDataSource } from "../common/utils/MyLazyDataSource"
+
 //路由参数类型
 export class routerParams<T>{
   param:T
@@ -15,14 +17,13 @@ export class commentsRouterParamsModel{
   detail:PlayListModel = new PlayListModel()
 }
 export class mvRouterParamsModel{
-  id:number = 0
   index:number = 0
   mvList:Array<MVModel> = []
 }
 
 export enum playListType{
-  playList = 0,
-  album = 1,
+  playList = 'playlist',
+  album = 'album',
 }
 
 //程序需要的歌单数据类型
@@ -129,6 +130,11 @@ export interface areaTopArtists{
   artists: Array<topArtistsModel>
 }
 
+//后台返回的评论数据类型，为了拿到more
+export class responseComments{
+  more:boolean = true
+  comments:Array<commentsModel> = []
+}
 //评论数据
 export class commentsModel{
   commentId:number = 0
@@ -162,7 +168,6 @@ export class MVModel{
   commentCount:number = 0
   publishTime:string = ''
   likedCount:number = 0
-  liked:boolean = false
   url:string = ''
   picUrl:string = ''  //推荐页面用
   copywriter:string = ''  //推荐页面用
@@ -171,6 +176,12 @@ export class MVModel{
   controller?:VideoController = new VideoController() //视频播放的控制器
   showPlayButton:boolean = false  //是否现在视频中间的播放按钮，播放按钮要单独控制，不要跟isPlaying绑定
   pauseTime:number = 0
+  liked:boolean = false
+  comments?:Array<commentsModel> = []
+  commentsLazyData?:MyLazyDataSource<commentsModel> = new MyLazyDataSource()  //评论懒加载数据
+  showComments:boolean = false
+  hasMoreComment?:boolean = true
+  listScrolled?:boolean = false
 }
 export interface responseArtistModel{
   artist:Artist

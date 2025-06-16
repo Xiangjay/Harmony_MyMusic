@@ -1,23 +1,13 @@
 import { router, window } from '@kit.ArkUI'
 import log from '@open/log'
-import { routerParams,MVModel, mvRouterParamsModel,responseArtistModel } from '../models/DataModels'
+import { routerParams,MVModel, mvRouterParamsModel,responseArtistModel} from '../models/DataModels'
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { TopNavBar } from '../components/common/TopNavBar'
 import { getMvDetailById, getMvInfoById, getMvUrlById } from '../common/apis/MVApis'
-import { countTransform, myDataMerge } from '../common/utils/CommonTools'
+import { myDataMerge } from '../common/utils/CommonTools'
 import { Loading } from '../components/common/Loading'
 import { getSingerDetailById } from '../common/apis/MusicApis'
 import {MvContent} from '../components/MV/MvContent'
-
-@Extend(Text) function infoText(size:number = BasicConstants.FONT_SIZE_NORMAL,color:ResourceColor = Color.White) {
-  .fontSize(size)
-  .fontColor(color)
-}
-
-class testMV{
-  url:string = ''
-  pic:string = ''
-}
 
 @Entry
 @Component
@@ -27,34 +17,43 @@ struct PlayMV {
   windowClass: window.Window = AppStorage.get("windowClass") as window.Window;	//拿到全局window对象
   private swiperController: SwiperController = new SwiperController()
   @State isLoading:boolean = true
+  @State mvLoading:boolean = false
   @State mvList:MVModel[] = []
-  @State currentMvId:number = 0
   @State currentPlayIndex:number = 0
-  @State currentMV:MVModel = new MVModel()
+  @State currentMv:MVModel = new MVModel()
+  //评论弹窗用
+  @State commentsListHeight: string = '0%'
+  @State commentsListOpacity: number = 0
+  private animationDuration:number = 300
+
+  //懒加载数据，由MyLazyDataSource管理评论列表
+  // private commentsLazyData:MyLazyDataSource<commentsModel> = new MyLazyDataSource()
+  @State pageSize:number = 5
+  @State offsetNum:number = 0 //数据偏移量
 
   getMVDetail = async (mvId:number) =>{
     let mv:MVModel = new MVModel()
-    const mvDetail = await getMvDetailById<MVModel,null>(mvId)
+    const mvDetail = await getMvDetailById<MVModel,null>(mvId)  //拿到MV详情
     mv = myDataMerge<MVModel>(mv,mvDetail.data)
-    const mvInfo = await getMvInfoById<MVModel,null>(mvId)
+    const mvInfo = await getMvInfoById<MVModel,null>(mvId)  //拿到MV点赞数和评论数
     mv = myDataMerge<MVModel>(mv,mvInfo)
-    const mvUrl = await getMvUrlById<MVModel,null>(mvId)
+    const mvUrl = await getMvUrlById<MVModel,null>(mvId)  //拿到MV播放地址
     mv = myDataMerge<MVModel>(mv,mvUrl.data)
-    const avatar = await getSingerDetailById<responseArtistModel,null>(mv.artistId)
+    const avatar = await getSingerDetailById<responseArtistModel,null>(mv.artistId) //拿到MV歌手头像
     mv.artistAvatar = avatar.data.artist.avatar
-    mv.controller = new VideoController()
+    mv.controller = new VideoController() //初始化MvController，也是因为可选属性，上面new的时候没有初始化
     this.mvList.push(mv)
+    if(this.mvList.length === this.routerParams.mvList.length){ //所有mv数据都拿完了
+      this.currentMv = this.mvList[this.currentPlayIndex]
+      this.currentMv.isPlaying = true
+      this.isLoading = false
+    }
   }
 
   getMvList = async (list:Array<MVModel>)=>{
     for (let i = 0; i < list.length; i++) {
       //对每一个MV发送请求获取数据
       await this.getMVDetail(list[i].id);
-      //请求都发送完了
-      if(i === list.length -1){
-        this.mvList[this.currentPlayIndex].isPlaying = true
-        this.isLoading = false
-      }
     }
   }
 
@@ -62,7 +61,6 @@ struct PlayMV {
     this.windowClass.setSpecificSystemBarEnabled('navigationIndicator', true)  //底部导航条不隐藏
     try {
       this.routerParams = (router.getParams() as routerParams<mvRouterParamsModel>).param
-      this.currentMvId = this.routerParams.id
       this.currentPlayIndex = this.routerParams.index
       this.getMvList(this.routerParams.mvList)
     }catch {
@@ -70,10 +68,10 @@ struct PlayMV {
     }
   }
 
-  @Builder contentBuilder(){
+  @Builder swiperBuilder(){
     Swiper(this.swiperController){
       ForEach(this.mvList,(mv:MVModel)=>{
-        MvContent({ mv:mv })
+        MvContent({ mv:mv})
       },(mv:MVModel)=>mv.id.toString())
     }
     .indicator(false)
@@ -84,88 +82,20 @@ struct PlayMV {
     .index(this.currentPlayIndex)
     .onChange((index: number) => {
       this.currentPlayIndex = index;
-      this.mvList.forEach((mv:MVModel,mvIndex:number)=>{
+      this.currentMv = this.mvList[index]
+      this.mvList.forEach((mv:MVModel)=>{
         mv.showPlayButton = false
-        if(mvIndex === index){
-          mv.isPlaying = true
-        }else {
-          mv.isPlaying = false
-        }
+        mv.isPlaying = false
+        mv.showComments = false
       })
-    })
-  }
-  @Builder rightButtonsBuilder(mv:MVModel){
-    Column({space:20}){
-      Column({space:5}){
-        Image($r('app.media.icon_dianzan'))
-          .width(30)
-          .fillColor(Color.White)
-        Text(countTransform(mv.playCount))
-          .infoText(BasicConstants.FONT_SIZE_SMALL)
-      }
-      Column({space:5}){
-        Image($r('app.media.icon_comment'))
-          .width(30)
-          .fillColor(Color.White)
-        Text(countTransform(mv.commentCount))
-          .infoText(BasicConstants.FONT_SIZE_SMALL)
-      }
-      Column({space:5}){
-        Image($r('app.media.icon_share'))
-          .width(30)
-          .fillColor(Color.White)
-        Text(countTransform(mv.shareCount))
-          .infoText(BasicConstants.FONT_SIZE_SMALL)
-      }
-    }
-    .padding({right:10})
-    .alignRules({
-      'top': { 'anchor': '__container__', 'align': VerticalAlign.Center },
-      'right': { 'anchor': '__container__', 'align': HorizontalAlign.End }
-    })
-  }
-  @Builder bottomInfoBuilder(mv:MVModel){
-    Column({space:10}){
-      Row({space:5}){
-        Image(mv.artistAvatar)
-          .width(40)
-          .borderRadius(50)
-        Text(mv.artistName)
-          .infoText()
-      }
-      .width(BasicConstants.FULL_WIDTH)
-      .alignItems(VerticalAlign.Center)
-      Row({space:5}){
-        Row(){
-          Text('MV')
-            .infoText()
-        }
-        .padding(5)
-        .backgroundColor('#3a3e41')
-        Text(mv.name)
-          .infoText()
-      }
-      .width(BasicConstants.FULL_WIDTH)
-      .alignItems(VerticalAlign.Center)
-      Text(mv.publishTime)
-        .infoText(BasicConstants.FONT_SIZE_SMALL,'#a9a9a9')
-        .width(BasicConstants.FULL_WIDTH)
-    }
-    .padding({
-      left:10,
-      bottom:10
-    })
-    .width('80%')
-    .alignRules({
-      'bottom': { 'anchor': '__container__', 'align': VerticalAlign.Bottom },
-      'left': { 'anchor': '__container__', 'align': HorizontalAlign.Start }
+      this.currentMv.isPlaying = true
     })
   }
 
   build() {
     if (!this.isLoading){
       Stack({alignContent:Alignment.Top}){
-        this.contentBuilder()
+        this.swiperBuilder()
         //返回按钮
         Row(){
           TopNavBar({color:'#ffffff'})
@@ -179,7 +109,13 @@ struct PlayMV {
       .height(BasicConstants.FULL_HEIGHT)
       .backgroundColor(Color.Black)
     } else {
-      Loading()
+      Column(){
+        Loading()
+      }
+      .height(BasicConstants.FULL_HEIGHT)
+      .width(BasicConstants.FULL_WIDTH)
+      .alignItems(HorizontalAlign.Center)
+      .justifyContent(FlexAlign.Center)
     }
   }
 }

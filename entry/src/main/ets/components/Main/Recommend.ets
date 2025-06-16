@@ -154,7 +154,6 @@ export struct Recommend {
           .clip(true)
           .onClick(()=>{
             const param:mvRouterParamsModel = {
-              id: item.id,
               index: index,
               mvList: this.recommendMVList
             }

@@ -28,6 +28,7 @@ export function getAlbumDynamicById<T,K>(albumId:number){
   return myHttp<T,K>(`/album/detail/dynamic?id=${albumId}`)
 }
 //通过歌单或专辑id获取评论
-export function getCommentsById<T,K>(type:string,id:number){
-  return myHttp<T,K>(`/comment/${type}?id=${id}`)
+export function getCommentsById<T,K>(type:string,id:number,offsetNum:number,pageSize:number = 20){
+  //默认每次取10条数据
+  return myHttp<T,K>(`/comment/${type}?id=${id}&offset=${offsetNum}&limit=${pageSize}`)
 }

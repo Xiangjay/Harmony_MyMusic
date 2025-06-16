@@ -146,7 +146,13 @@ struct MV {
           bottom:20
         })
       }else {
-        Loading()
+        Column(){
+          Loading()
+        }
+        .height(BasicConstants.FULL_HEIGHT)
+        .width(BasicConstants.FULL_WIDTH)
+        .alignItems(HorizontalAlign.Center)
+        .justifyContent(FlexAlign.Center)
       }
     }
     .height(BasicConstants.FULL_HEIGHT)

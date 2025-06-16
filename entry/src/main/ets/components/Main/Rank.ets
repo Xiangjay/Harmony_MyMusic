@@ -147,12 +147,16 @@ export struct Rank {
         if(!this.isLoading){
           this.topArtistsListBuilder()
         }else{
-          Loading()
+          Column(){
+            Loading()
+          }
+          .height(BasicConstants.FULL_HEIGHT)
+          .width(BasicConstants.FULL_WIDTH)
+          .alignItems(HorizontalAlign.Center)
+          .justifyContent(FlexAlign.Center)
         }
       }
       //内容没铺满高度，所以要有下面的属性
-      .height(BasicConstants.FULL_HEIGHT)
-      .width(BasicConstants.FULL_WIDTH)
       .justifyContent(FlexAlign.Start)
       .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
     }
