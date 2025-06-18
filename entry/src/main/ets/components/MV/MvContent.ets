@@ -25,10 +25,6 @@ export struct MvContent {
 
   watchMv(){  //通过watch监听isPlaying属性的变化
     this.mv.isPlaying ? this.mv.controller?.start() : this.mv.controller?.pause()
-    if(!this.mv.showComments){
-      this.commentsListHeight = '0%'
-      this.commentsListOpacity = 0
-    }
   }
 
   getComments = async () =>{
@@ -58,6 +54,7 @@ export struct MvContent {
           .fillColor(this.mv.liked === false ? Color.White : '#ff0000')
           .onClick(()=>{
             this.mv.liked = !this.mv.liked
+            this.mv.likedCount +=1
           })
         Text(countTransform(this.mv.playCount))
           .infoText(BasicConstants.FONT_SIZE_SMALL)
@@ -67,6 +64,7 @@ export struct MvContent {
           .width(30)
           .fillColor(Color.White)
           .onClick(()=>{
+            this.mv.showComments = true
             this.commentsListHeight = '100%'
             this.commentsListOpacity = 1
           })
@@ -136,6 +134,7 @@ export struct MvContent {
         .onClick(()=>{
           this.commentsListHeight = '0%'
           this.commentsListOpacity = 0
+          this.mv.showComments = false
         })
         Column(){
           List(){
@@ -194,7 +193,7 @@ export struct MvContent {
             },(item:commentsModel)=>item.commentId.toString())
           }
           .scrollBar(BarState.Off)
-          .edgeEffect(this.mv.hasMoreComment? EdgeEffect.None : EdgeEffect.Spring)
+          .edgeEffect(this.hasMore? EdgeEffect.None : EdgeEffect.Spring)
           .fadingEdge(true)
           .layoutWeight(1)
           .onScrollStart(()=>{

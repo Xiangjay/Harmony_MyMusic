@@ -5,6 +5,7 @@ import { BreakPointTool } from '../common/utils/BreakPointTool'
 import { preferencesUtil } from '../common/utils/PreferencesUtils';
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
 import { aVSessionManger } from '../common/utils/AVSessionManager';
+import {playListDB} from '../db/playListDB'
 
 const DOMAIN = 0x0000;
 
@@ -19,6 +20,8 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
+    //初始化播放列表关系型数据库
+    playListDB.initPlayListDB(this.context,'PLAYLIST')
     // Main window is created, set main page for this ability
     windowStage.loadContent('pages/EntryPage', (err) => {
       /*
@@ -81,6 +84,7 @@ export default class EntryAbility extends UIAbility {
       //初始化封装好的媒体播放器和长时任务
       avPlayerManager.initAudioPlayer()
       aVSessionManger.initAvSession(this.context)
+
 
       if (err.code) {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));

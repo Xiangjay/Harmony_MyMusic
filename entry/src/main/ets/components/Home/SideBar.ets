@@ -1,7 +1,7 @@
-import { BasicConstants } from "../common/constants/BasicConstants"
+import { BasicConstants } from "../../common/constants/BasicConstants"
 import { AlertDialog, window } from '@kit.ArkUI'
 import { common, ConfigurationConstant } from '@kit.AbilityKit'
-import {preferencesUtil} from '../common/utils/PreferencesUtils'
+import {preferencesUtil} from '../../common/utils/PreferencesUtils'
 import { preferences } from '@kit.ArkData'
 
 @Component

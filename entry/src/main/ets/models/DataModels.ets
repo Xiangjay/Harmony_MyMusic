@@ -24,8 +24,16 @@ export class mvRouterParamsModel{
 export enum playListType{
   playList = 'playlist',
   album = 'album',
+  local = 'local'
 }
-
+@Observed
+export class LocalPlayListModel{
+  id:number = 0
+  name:string = ''
+  songs:SongModel[] = []
+  picUrl:string = ''
+  saveTime:number = 0 //个人中心用
+}
 //程序需要的歌单数据类型
 @Observed
 export class PlayListModel{
@@ -40,8 +48,9 @@ export class PlayListModel{
   tags:string[] = []
   commentCount:number = 0
   shareCount:number = 0
-  artist:Artist = new Artist() //专辑用
-  publishTime:number = 0 //专辑用
+  artist?:Artist = new Artist() //专辑用
+  publishTime?:number = 0 //专辑用
+  saveTime?:number = 0 //个人中心用
 }
 
 //程序需要的歌曲数据类型
@@ -51,13 +60,13 @@ export class SongModel{
   name:string = ''  //歌曲名字
   url:string = ''   //播放地址
   artists:Array<Artist> = []  //歌手
-  showArtists:string[] = []   //页面展示用的歌手
+  artistName:string[] = []   //页面展示用的歌手
   showPic:string = ''     //用于播放音乐时展示的图片
   album: Album = new Album()   //所属专辑
   isPlaying:boolean = false //播放状态
   time:number = 0   //当前播放时间
   duration:number = 0   //歌曲总时长
-  song?:newSong = new newSong()  //单独给新歌推荐用
+  song?:newSong = new newSong()  //单独给新歌推荐用，为了从里面拿歌手数据
 }
 //单独给新歌推荐用，为了拿到歌手数据
 class newSong {
@@ -172,17 +181,20 @@ export class MVModel{
   picUrl:string = ''  //推荐页面用
   copywriter:string = ''  //推荐页面用
   //以下为播放页面用
-  isPlaying:boolean = false //是否在播放
+  isPlaying?:boolean = false //是否在播放
   controller?:VideoController = new VideoController() //视频播放的控制器
-  showPlayButton:boolean = false  //是否现在视频中间的播放按钮，播放按钮要单独控制，不要跟isPlaying绑定
-  pauseTime:number = 0
-  liked:boolean = false
+  showPlayButton?:boolean = false  //是否现在视频中间的播放按钮，播放按钮要单独控制，不要跟isPlaying绑定
+  liked?:boolean = false
   comments?:Array<commentsModel> = []
   commentsLazyData?:MyLazyDataSource<commentsModel> = new MyLazyDataSource()  //评论懒加载数据
-  showComments:boolean = false
-  hasMoreComment?:boolean = true
-  listScrolled?:boolean = false
+  showComments?:boolean = false
 }
+//mv拿用户数据用
 export interface responseArtistModel{
   artist:Artist
+}
+//自定义数据库增删改查返回的数据类型
+export interface DataBaseResponseModel{
+  code:number //0代表成功，1代表失败，-1代表没有数据库
+  message:string
 }

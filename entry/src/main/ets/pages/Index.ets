@@ -1,9 +1,9 @@
 import { BreakPointConstants } from '../common/constants/BreakPointConstants'
 import {BasicConstants} from '../common/constants/BasicConstants'
-import { Main } from '../components/Main';
-import { My } from '../components/My';
+import { Main } from '../components/Home';
 import { router } from '@kit.ArkUI';
 
+//程序主页
 @Entry
 @Component
 struct Index {
@@ -23,16 +23,24 @@ struct Index {
         .fontColor(this.currentIndex === targetIndex ? $r('app.color.icon_svg_selected') : $r('app.color.icon_svg_default'))
     }
     .onClick(()=>{
-      if(targetIndex === 1){
-        router.pushUrl({
-          url:'pages/Music'
-        })
-      }else if(targetIndex === 2) {
-        router.pushUrl({
-          url:'pages/MV'
-        })
-      }else {
-        this.tabController.changeIndex(targetIndex)
+      switch (targetIndex) {
+        case 1:
+          router.pushUrl({
+            url:'pages/Music'
+          })
+          break;
+        case 2:
+          router.pushUrl({
+            url:'pages/MV'
+          })
+          break;
+        case 3:
+          router.pushUrl({
+            url:'pages/My'
+          })
+          break;
+        default: this.tabController.changeIndex(targetIndex)
+          break;
       }
     })
     .width(BasicConstants.FULL_WIDTH)
@@ -54,7 +62,7 @@ struct Index {
       }
       .tabBar(this.tabBarBuilder('MV',2,$r("app.media.icon_mv")))
       TabContent(){
-        My()
+
       }
       .tabBar(this.tabBarBuilder('我的',3,$r("app.media.icon_my")))
     }

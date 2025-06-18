@@ -1,6 +1,5 @@
 import { router } from '@kit.ArkUI'
 import {getSingerDetailById} from '../common/apis/MusicApis'
-import {responseSinger} from '../../../backup/DataModel'
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { numberToTime } from '../common/utils/CommonTools'
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
@@ -9,6 +8,7 @@ import { PlayListModel, routerParams, SongModel, PlayMode } from '../models/Data
 import { TopNavBar } from '../components/common/TopNavBar'
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
 
+//歌曲播放页面
 @Entry
 @Component
 struct Play {
@@ -26,9 +26,9 @@ struct Play {
 
   //通过当前歌曲的歌手Id，获取歌手图片，这里如果是合唱的话默认显示第一位歌手图片
   getSingerById = async () =>{
-    const singerId = this.currentSong.artists[0].id
-    const res = await getSingerDetailById<responseSinger,null>(singerId)
-    this.currentSong.showPic = res.data.artist.cover
+    // const singerId = this.currentSong.artists[0].id
+    // const res = await getSingerDetailById<responseSinger,null>(singerId)
+    // this.currentSong.showPic = res.data.artist.cover
   }
 
   aboutToAppear(): void {
@@ -200,10 +200,12 @@ struct Play {
           })
       }
       Image($r("app.media.icon_prev"))
-        .fillColor(Color.White)
+        .fillColor(this.currentPlayList.songs.length > 1 ? Color.White : Color.Gray)
         .width(30)
         .onClick(()=>{
-          this.playPrev()
+          if(this.playIndex !== -1){
+            this.playPrev()
+          }
           // avPlayerManager.playPrev()
         })
       // 播放按钮
@@ -215,11 +217,10 @@ struct Play {
         })
       // 下一首
       Image($r("app.media.icon_next"))
-        .fillColor(Color.White)
+        .fillColor(this.currentPlayList.songs.length > 1 ? Color.White : Color.Gray)
         .width(30)
         .onClick(()=>{
-          if(this.currentPlayList.songs.length > 1){
-            // this.playNext()
+          if(this.playIndex !== -1){
             this.playNext()
           }
         })
@@ -312,7 +313,7 @@ struct Play {
                       .fontColor(item.id === this.currentSong.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_default'))
                       .maxLines(1)
                       .textOverflow({overflow:TextOverflow.Ellipsis})
-                    Text(item.showArtists.toString())
+                    Text(item.artistName.toString())
                       .fontSize(BasicConstants.FONT_SIZE_SMALL)
                       .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_light'))
                       .maxLines(1)
@@ -389,7 +390,7 @@ struct Play {
               Text(this.currentSong.name)
                 .fontColor('#fcfcfc')
                 .fontSize(BasicConstants.FONT_SIZE_LARGE)
-              Text(this.currentSong.showArtists.toString())
+              Text(this.currentSong.artistName.toString())
                 .fontColor('#fcfcfc')
                 .fontSize(BasicConstants.FONT_SIZE_NORMAL)
             }

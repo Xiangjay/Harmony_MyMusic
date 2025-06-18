@@ -59,6 +59,22 @@
     {
       "name": "list_divider",
       "value": "#808080"
+    },
+    {
+      "name": "warning",
+      "value": "#dc143c"
+    },
+    {
+      "name": "delete",
+      "value": "#e85a88"
+    },
+    {
+      "name": "disabled",
+      "value": "#808080"
+    },
+    {
+      "name": "edit",
+      "value": "#6eafbb"
     }
   ]
 }

@@ -9,11 +9,14 @@ import {
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
 import { countTransform, formatData, myDataMerge, SpecificKey} from "../common/utils/CommonTools";
-import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType, commentsRouterParamsModel} from '../models/DataModels'
+import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType, commentsRouterParamsModel,
+  LocalPlayListModel} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 import { TopNavBar } from "../components/common/TopNavBar";
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
-
+import log from "@open/log";
+import {playListDB} from '../db/playListDB'
+import { relationalStore } from "@kit.ArkData";
 
 @Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
   .fontSize(fontSize)
@@ -23,6 +26,7 @@ import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
   .textOverflow({ overflow: TextOverflow.Ellipsis })
 }
 
+//歌单、专辑详情页面页面
 @Entry
 @Component
 struct Music {
@@ -42,7 +46,7 @@ struct Music {
   //懒加载数据
   private musicLazyData:MyLazyDataSource<SongModel> = new MyLazyDataSource()
 
-  //通过传过来的歌单ID获取歌单里所有歌曲
+  //通过传过来的歌单ID获取歌单详细
   getPlayListDetail = async (id:number) => {
     //获取歌单详细信息
     const responsePlayList = await getSongListDetailById<PlayListModel, null>(id)
@@ -84,10 +88,10 @@ struct Music {
       song.showPic = song.album.picUrl
       if(song.artists.length > 1){
         song.artists.forEach(item=>{
-          song.showArtists.push(item.name)
+          song.artistName.push(item.name)
         })
       }else{
-        song.showArtists.push(song.artists[0].name)
+        song.artistName.push(song.artists[0].name)
       }
     })
     //通过歌曲ID获取歌曲播放URL
@@ -107,7 +111,7 @@ struct Music {
     this.songListOpacity = 1
   }
   //通过传过来的专辑ID获取专辑详细
-  getAlbumDetail = async (id:number) =>{
+  getAlbumDetail = async (id:number) => {
     //先拿专辑基本信息
     const resAlbum = await getAlbumDetailById<PlayListModel,null>(id)
     this.playList = myDataMerge<PlayListModel>(new PlayListModel(),resAlbum.album)
@@ -124,6 +128,10 @@ struct Music {
     this.playList.songs = []
     const specificKeys:SpecificKey[] = [
       {
+        specificKey:'artists',
+        sourceKey:'ar'
+      },
+      {
         specificKey:'duration',
         sourceKey:'dt'
       }
@@ -132,6 +140,16 @@ struct Music {
       this.playList.songs.push(myDataMerge<SongModel>(new SongModel(),item,specificKeys))
       //保存所有歌曲ID，用于后续获取歌曲URL
       songIds.push(item.id)
+    })
+    //处理歌曲图片和歌手名字
+    this.playList.songs.forEach((song:SongModel)=>{
+      if(song.artists.length > 1){
+        song.artists.forEach(item=>{
+          song.artistName.push(item.name)
+        })
+      }else{
+        song.artistName.push(song.artists[0].name)
+      }
     })
     //通过歌曲ID获取歌曲播放URL
     const responseSongUrls = await getSongUrlByIds<Array<SongModel>, null>(songIds)
@@ -150,9 +168,49 @@ struct Music {
     this.songListHeight = '65%'
     this.songListOpacity = 1
   }
+  //通过传过来的歌单ID从本地数据库里获取详情
+  getLocalPlayListDetail = async (id:number) => {
+    // this.playList = await playListDB.queryData('PLAYLIST')
+  }
 
-  addList2ToLocal = ()=>{
-
+  addPlayList2ToLocal = async ()=>{
+    const res = await playListDB.queryData('PLAYLIST', ['ID,NAME,PICTURE,SONGS,SHOWDETAIL'], this.playList.id)
+    if(res.length === 0){
+      const valueBucket: relationalStore.ValuesBucket = {
+        ID:this.playList.id,
+        NAME: this.playList.name,
+        PICTURE: this.playList.picUrl,
+        SONGS:JSON.stringify(this.playList.songs),
+        SAVETIME:new Date().getTime()
+      };
+      const res = await playListDB.insertData('PLAYLIST',valueBucket)
+      switch (res.code) {
+        case 1:
+          this.promptAction.showToast({
+            message: '歌单保存失败，请稍后重试',
+            duration: 2000,
+          })
+          break;
+        case -1:
+          this.promptAction.showToast({
+            message: '程序异常，请稍后重试',
+            duration: 2000,
+            textColor: Color.Red
+          })
+          break;
+        default:
+          this.promptAction.showToast({
+            message: '歌单保存成功，可前往个人中心查看',
+            duration: 2000
+          })
+          break;
+      }
+    }else {
+      this.promptAction.showToast({
+        message: '该歌单已存在',
+        duration: 2000
+      })
+    }
   }
   addSong2Local = ()=>{
 
@@ -177,15 +235,17 @@ struct Music {
       })
     }
   }
-
   aboutToAppear(): void {
     try {
       this.routerParams = (router.getParams() as routerParams<musicRouterParamsModel>).param
       this.playListType = this.routerParams.type
+      // this.getListDetail(this.playListType === playListType.playList ? playListType.playList : playListType.album, this.routerParams.id)
       if(this.playListType === playListType.playList){
         this.getPlayListDetail(this.routerParams.id)
       }else if(this.playListType === playListType.album){
         this.getAlbumDetail(this.routerParams.id)
+      }else {
+        this.getLocalPlayListDetail(this.routerParams.id)
       }
     } catch {
       this.noList = true
@@ -260,17 +320,6 @@ struct Music {
       .onClick(()=>{
         this.goToComments()
       })
-      // Button(){
-      //   Row(){
-      //     Image($r('app.media.icon_add_track'))
-      //       .width(20)
-      //     Text(this.playList.trackCount != 0 ? countTransform(this.playList.trackCount,false) : '收藏')
-      //       .fontColor('#ffffff')
-      //       .margin({left:5})
-      //   }
-      //   .justifyContent(FlexAlign.Center)
-      // }
-      // .coverButtons()
     }
     .margin({top:10})
     .width(BasicConstants.FULL_WIDTH)
@@ -301,7 +350,7 @@ struct Music {
           .width(25)
           .height(25)
           .onClick(()=>{
-            this.addList2ToLocal()
+            this.addPlayList2ToLocal()
           })
       }
       .padding({
@@ -338,7 +387,7 @@ struct Music {
                     .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_default'))
                     .maxLines(1)
                     .textOverflow({overflow:TextOverflow.Ellipsis})
-                  Text(item.showArtists.toString() || this.playList.artist?.name)
+                  Text(item.artistName.toString())
                     .fontSize(BasicConstants.FONT_SIZE_SMALL)
                     .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_light'))
                     .maxLines(1)

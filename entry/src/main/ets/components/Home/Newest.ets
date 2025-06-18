@@ -2,7 +2,8 @@ import { getMusicBanner, getNewestAlbumsList, getNewestMVList } from '../../comm
 import { BasicConstants } from '../../common/constants/BasicConstants'
 import {Title} from '../common/Title'
 import {banner,PlayListModel,MVModel,musicRouterParamsModel,
-  playListType} from '../../models/DataModels'
+  playListType,
+  mvRouterParamsModel} from '../../models/DataModels'
 import { myDataMerge } from '../../common/utils/CommonTools'
 import { Loading } from '../common/Loading'
 import { router } from '@kit.ArkUI'
@@ -116,7 +117,7 @@ export struct Newest {
                   'top': { 'anchor': '__container__', 'align': VerticalAlign.Top },
                   'left': { 'anchor': '__container__', 'align': HorizontalAlign.Start }
                 })
-              Text(item.artist.name)
+              Text(item.artist?.name)
                 .backgroundColor($r('app.color.label_background'))
                 .fontColor($r('app.color.label_text'))
                 .borderRadius(5)
@@ -149,7 +150,7 @@ export struct Newest {
     Column({space:10}){
       Title({title:'最新MV'})
       Swiper(){
-        ForEach(this.newestMVList,(item:MVModel)=>{
+        ForEach(this.newestMVList,(item:MVModel,index:number)=>{
           RelativeContainer(){
             Image(item.cover)
               .width(BasicConstants.FULL_WIDTH)
@@ -182,6 +183,18 @@ export struct Newest {
           .clip(true)
           .borderRadius(10)
           .height(200)
+          .onClick(()=>{
+            const param:mvRouterParamsModel = {
+              index: index,
+              mvList: this.newestMVList
+            }
+            router.pushUrl({
+              url:'pages/PlayMV',
+              params: {
+                param: param
+              }
+            })
+          })
         },(item:MVModel)=>item.id.toString())
       }
       .autoPlay(true)

@@ -112,7 +112,6 @@ export class AVPlayerManager{
     }
     this.currentSong = currentPlayList.songs[playIndex]
     this.playSong(this.currentSong)
-    // this.playSong(currentPlayList.songs[playIndex])
   }
   //下一首
   playNext(){
@@ -132,7 +131,6 @@ export class AVPlayerManager{
     }
     this.currentSong = currentPlayList.songs[playIndex]
     this.playSong(this.currentSong)
-    // this.playSong(currentPlayList.songs[playIndex])
   }
   //重置播放器
   reset(){

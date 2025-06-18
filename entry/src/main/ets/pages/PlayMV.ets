@@ -9,6 +9,7 @@ import { Loading } from '../components/common/Loading'
 import { getSingerDetailById } from '../common/apis/MusicApis'
 import {MvContent} from '../components/MV/MvContent'
 
+//视频播放页面
 @Entry
 @Component
 struct PlayMV {
@@ -21,13 +22,6 @@ struct PlayMV {
   @State mvList:MVModel[] = []
   @State currentPlayIndex:number = 0
   @State currentMv:MVModel = new MVModel()
-  //评论弹窗用
-  @State commentsListHeight: string = '0%'
-  @State commentsListOpacity: number = 0
-  private animationDuration:number = 300
-
-  //懒加载数据，由MyLazyDataSource管理评论列表
-  // private commentsLazyData:MyLazyDataSource<commentsModel> = new MyLazyDataSource()
   @State pageSize:number = 5
   @State offsetNum:number = 0 //数据偏移量
 
@@ -80,6 +74,7 @@ struct PlayMV {
     .width(BasicConstants.FULL_WIDTH)
     .height(BasicConstants.FULL_HEIGHT)
     .index(this.currentPlayIndex)
+    .disableSwipe(this.currentMv.showComments)  //评论列表打开时禁止滑动切换
     .onChange((index: number) => {
       this.currentPlayIndex = index;
       this.currentMv = this.mvList[index]

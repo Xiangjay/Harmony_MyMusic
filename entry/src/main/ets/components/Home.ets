@@ -1,11 +1,11 @@
 import { BasicConstants } from '../common/constants/BasicConstants'
-import {SideBar} from './SideBar'
+import {SideBar} from './Home/SideBar'
 import {getDefaultKeywords} from '../common/apis/HomeApis'
 import {SearchKeyWordInterface} from '../models/DataModels'
-import { Recommend } from './Main/Recommend'
+import { Recommend } from './Home/Recommend'
 import { Empty } from './common/Empty'
-import { Newest } from './Main/Newest'
-import { Rank } from './Main/Rank'
+import { Newest } from './Home/Newest'
+import { Rank } from './Home/Rank'
 
 @Component
 export struct Main {

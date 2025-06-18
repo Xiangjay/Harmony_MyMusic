@@ -39,7 +39,7 @@ class AVSessionManger{
       assetId:song.id.toString(),
       title:song.name,
       mediaImage:song.showPic,
-      artist:song.showArtists.toString(),
+      artist:song.artistName.toString(),
       duration:song.duration
     })
   }

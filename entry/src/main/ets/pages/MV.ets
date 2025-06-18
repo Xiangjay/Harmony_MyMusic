@@ -1,12 +1,13 @@
 import { BasicConstants } from "../common/constants/BasicConstants"
 import { countTransform, myDataMerge } from "../common/utils/CommonTools"
-import { MVModel } from "../models/DataModels"
+import { MVModel, mvRouterParamsModel } from "../models/DataModels"
 import { Loading } from "../components/common/Loading"
 import {Title} from '../components/common/Title'
 import { getAllMV } from "../common/apis/MVApis"
 import { TopNavBar } from "../components/common/TopNavBar"
 import { router } from "@kit.ArkUI"
 
+//MV列表页面
 @Entry
 @Component
 struct MV {
@@ -57,7 +58,7 @@ struct MV {
     Column({space:10}){
       Title({title:title})
       List({space:10}){
-        ForEach(mvList,(mv:MVModel)=>{
+        ForEach(mvList,(mv:MVModel,index:number)=>{
           ListItem(){
             RelativeContainer(){
               Image(mv.cover)
@@ -102,10 +103,14 @@ struct MV {
             .clip(true)
             .width('80%')
             .onClick(()=>{
+              const param:mvRouterParamsModel = {
+                index: index,
+                mvList: mvList
+              }
               router.pushUrl({
                 url:'pages/PlayMV',
-                params:{
-                  param: mv.id
+                params: {
+                  param: param
                 }
               })
             })

@@ -6,6 +6,8 @@
     "pages/Music",
     "pages/Comments",
     "pages/MV",
-    "pages/PlayMV"
+    "pages/PlayMV",
+    "pages/My",
+    "pages/MyPlayList"
   ]
 }

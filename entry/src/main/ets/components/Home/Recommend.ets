@@ -9,6 +9,7 @@ import {PlayListModel,SongModel,recommendDjProgram,musicRouterParamsModel,
   MVModel,
   mvRouterParamsModel} from '../../models/DataModels'
 import { Loading } from '../common/Loading'
+import log from '@open/log'
 
 @Component
 export struct Recommend {
@@ -51,7 +52,7 @@ export struct Recommend {
     })
     this.recommendNewSongs.forEach((song:SongModel)=>{
       song.song?.artists.forEach(artist=>{
-        song.showArtists.push(artist.name)
+        song.artistName.push(artist.name)
       })
     })
     this.isLoading = false
@@ -180,6 +181,17 @@ export struct Recommend {
             Row({space:5}){
               Image(item.showPic)
                 .width('30%')
+                .onClick(()=>{
+                  const tempPlayList = new PlayListModel()
+                  tempPlayList.songs.push(item)
+                  AppStorage.setOrCreate('currentPlayList',tempPlayList)
+                  router.pushUrl({
+                    url:'pages/Play',
+                    params:{
+                      param:item
+                    }
+                  })
+                })
               Column(){
                 Text(item.name)
                   .fontWeight(FontWeight.Bold)
@@ -187,7 +199,7 @@ export struct Recommend {
                   .fontColor($r('app.color.text_default'))
                   .maxLines(1)
                   .textOverflow({overflow:TextOverflow.Ellipsis})
-                Text(item.showArtists.toString())
+                Text(item.artistName.toString())
                   .fontSize(BasicConstants.FONT_SIZE_SMALL)
                   .maxLines(1)
                   .textOverflow({overflow:TextOverflow.Ellipsis})

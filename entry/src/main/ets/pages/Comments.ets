@@ -19,6 +19,7 @@ import log from '@open/log'
   .textOverflow({ overflow: TextOverflow.Ellipsis })
 }
 
+//歌单、专辑评论页面
 @Entry
 @Component
 struct Comments {
