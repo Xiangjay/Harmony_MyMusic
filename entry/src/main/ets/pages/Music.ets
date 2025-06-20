@@ -16,7 +16,8 @@ import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
 import log from "@open/log";
 import {playListDB} from '../db/playListDB'
 import { relationalStore } from "@kit.ArkData";
-import { PlayListItem } from "../components/My/PlayListItem";
+import { PlayListItem } from "../components/common/PlayListItem";
+import { SongListItem } from "../components/common/SongListItem";
 
 @Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
   .fontSize(fontSize)
@@ -174,6 +175,7 @@ struct Music {
     this.songListOpacity = 1
   }
   addPlayList2ToLocal = async ()=>{
+    //看看是否有重复歌单
     const res = await playListDB.queryData('PLAYLIST', undefined, this.playList.id)
     if(res.length === 0){
       const valueBucket: relationalStore.ValuesBucket = {
@@ -221,42 +223,68 @@ struct Music {
     }
   }
   addSong2Local = async (song:SongModel)=>{
+    //获取所有本地列表
     const myPlayLists = await playListDB.queryData('PLAYLIST')
+    if(myPlayLists.length === 0){ //没有本地歌单，那么就弹窗提示
+      this.getUIContext().showAlertDialog({
+        title: '暂无本地歌单',
+        message: '请先添加歌单/专辑到本地歌单，或者在个人中心新建歌单',
+        autoCancel: true,
+        primaryButton: {
+          value: '取消',
+          fontColor:$r('app.color.text_light'),
+          action: () => {}
+        },
+        secondaryButton: {
+          value: '去个人中心',
+          fontColor:$r('app.color.edit'),
+          action: () => {
+            router.pushUrl({
+              url:'pages/My'
+            })
+          }
+        }
+      })
+      return
+    }
     const playListNames:string[] = []
     myPlayLists.forEach(item=>{
       playListNames.push(item.name)
     })
-    let preIndex:number = 0
+    //选择本地歌单弹窗
     this.getUIContext().showTextPickerDialog({
       range: playListNames,
-      selected: preIndex,
+      selected: 0,
       canLoop: false,
       cancelButtonStyle:{fontColor:$r('app.color.disabled')},
       onAccept: async (value: TextPickerResult) => {
-        preIndex = value.index as number
-        if(myPlayLists[preIndex].name === value.value){
-          const resPlayList = await playListDB.queryData('PLAYLIST', undefined, myPlayLists[preIndex].id)
-          let selectedPlayList = resPlayList[0]
-          selectedPlayList.songs.unshift(song)
-          const valueBucket: relationalStore.ValuesBucket = {
-            SONGS:JSON.stringify(selectedPlayList.songs),
-            SAVETIME: new Date().getTime()
-          };
-          const res = await playListDB.updateDataById('PLAYLIST',myPlayLists[preIndex].id,valueBucket)
-          if(res.code === 0){ //成功
-            this.promptAction.showToast({
-              message: res.message,
-              duration: BasicConstants.TOASTDURATION
-            })
-          }else { //失败
-            this.promptAction.showToast({
-              message: res.message,
-              duration: BasicConstants.TOASTDURATION
-            })
-          }
-        }else {
+        const index = value.index as number //选择的索引
+        //取出当前选择的歌单
+        const resPlayList = await playListDB.queryData('PLAYLIST', undefined, myPlayLists[index].id)
+        let selectedPlayList = resPlayList[0]
+        //看看选择的歌单中是否已经有该歌曲
+        const duplicated = selectedPlayList.songs.some(item=>item.id === song.id)
+        if(duplicated){
           this.promptAction.showToast({
-            message:'数据错误，请重试',
+            message: '该歌单已有此歌曲',
+            duration: BasicConstants.TOASTDURATION
+          })
+          return
+        }
+        selectedPlayList.songs.unshift(song)  //把这首歌加进去
+        const valueBucket: relationalStore.ValuesBucket = {
+          SONGS:JSON.stringify(selectedPlayList.songs),
+          SAVETIME: new Date().getTime()
+        };
+        const res = await playListDB.updateDataById('PLAYLIST',myPlayLists[index].id,valueBucket) //更新到数据库
+        if(res.code === 0){ //成功
+          this.promptAction.showToast({
+            message: res.message,
+            duration: BasicConstants.TOASTDURATION
+          })
+        }else { //失败
+          this.promptAction.showToast({
+            message: res.message,
             duration: BasicConstants.TOASTDURATION
           })
         }
@@ -407,10 +435,6 @@ struct Music {
             })
         }
       }
-      .padding({
-        left:10,
-        right:10
-      })
       .width(BasicConstants.FULL_WIDTH)
       .height(60)
       .alignItems(VerticalAlign.Center)
@@ -418,68 +442,73 @@ struct Music {
         width: { bottom: 1 },
         color:$r('app.color.list_divider')
       })
+      .padding({
+        left:10,
+        right:10
+      })
       // 播放列表
       List() {
         LazyForEach(this.musicLazyData, (item: SongModel, index: number) => {
           ListItem() {
-            Row({space:10}) {
-              Row(){
-                if(item.id === this.currentSong?.id){
-                  Image($r('app.media.icon_playing'))
-                    .width(20)
-                    .fillColor($r('app.color.icon_svg_selected'))
-                }else{
-                  Text((index + 1).toString())
-                    .fontColor($r('app.color.text_light'))
-                }
-              }
-              .width(30)
-              Row() {
-                Column({ space: 5 }) {
-                  Text(item.name)
-                    .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-                    .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_default'))
-                    .maxLines(1)
-                    .textOverflow({overflow:TextOverflow.Ellipsis})
-                  Text(item.artistName.toString())
-                    .fontSize(BasicConstants.FONT_SIZE_SMALL)
-                    .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_light'))
-                    .maxLines(1)
-                    .textOverflow({overflow:TextOverflow.Ellipsis})
-                }
-                .alignItems(HorizontalAlign.Start)
-                .justifyContent(FlexAlign.Center)
-              }
-              .layoutWeight(1)
-              .onClick(()=>{
-                //跳转播放时把当前播放列表存到全局
-                AppStorage.setOrCreate('currentPlayList',this.playList)
-                router.pushUrl({
-                  url:'pages/Play',
-                  params:{
-                    param:item
-                  }
-                })
-              })
-              if(this.playListType !== playListType.local){
-                Row(){
-                  Image($r('app.media.icon_add'))
-                    .width(20)
-                    .height(20)
-                    .fillColor($r('app.color.icon_svg_selected'))
-                    .onClick(()=>{
-                      this.addSong2Local(item)
-                    })
-                }
-              }
-            }
-            .padding({
-              left:10,
-              right:10
-            })
-            .height(60)
-            .width(BasicConstants.FULL_WIDTH)
-            .alignItems(VerticalAlign.Center)
+            SongListItem({song:item,currentSongId:this.currentSong.id,index:index,playList:this.playList,addSong2Local:this.addSong2Local})
+            // Row({space:10}) {
+            //   Row(){
+            //     if(item.id === this.currentSong?.id){
+            //       Image($r('app.media.icon_playing'))
+            //         .width(20)
+            //         .fillColor($r('app.color.icon_svg_selected'))
+            //     }else{
+            //       Text((index + 1).toString())
+            //         .fontColor($r('app.color.text_light'))
+            //     }
+            //   }
+            //   .width(30)
+            //   Row() {
+            //     Column({ space: 5 }) {
+            //       Text(item.name)
+            //         .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+            //         .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_default'))
+            //         .maxLines(1)
+            //         .textOverflow({overflow:TextOverflow.Ellipsis})
+            //       Text(item.artistName.toString())
+            //         .fontSize(BasicConstants.FONT_SIZE_SMALL)
+            //         .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_light'))
+            //         .maxLines(1)
+            //         .textOverflow({overflow:TextOverflow.Ellipsis})
+            //     }
+            //     .alignItems(HorizontalAlign.Start)
+            //     .justifyContent(FlexAlign.Center)
+            //   }
+            //   .layoutWeight(1)
+            //   .onClick(()=>{
+            //     //跳转播放时把当前播放列表存到全局
+            //     AppStorage.setOrCreate('currentPlayList',this.playList)
+            //     router.pushUrl({
+            //       url:'pages/Play',
+            //       params:{
+            //         param:item
+            //       }
+            //     })
+            //   })
+            //   if(this.playListType !== playListType.local){
+            //     Row(){
+            //       Image($r('app.media.icon_add'))
+            //         .width(20)
+            //         .height(20)
+            //         .fillColor($r('app.color.icon_svg_selected'))
+            //         .onClick(()=>{
+            //           this.addSong2Local(item)
+            //         })
+            //     }
+            //   }
+            // }
+            // .padding({
+            //   left:10,
+            //   right:10
+            // })
+            // .height(60)
+            // .width(BasicConstants.FULL_WIDTH)
+            // .alignItems(VerticalAlign.Center)
           }
           .border({
             width: { bottom: 1 },
@@ -494,21 +523,21 @@ struct Music {
     }
     .height(this.songListHeight)
     .opacity(this.songListOpacity)
-    .padding({
-      left:10,
-      right:10
-    })
     .animation({
       duration:this.animationDuration,
     })
     .width(BasicConstants.FULL_WIDTH)
     .backgroundColor($r('app.color.main_tab_background'))
+    .padding({
+      left:10,
+      right:10
+    })
   }
   @Builder localPlayListsBuilder(){
     Column({space:10}){
       List({space:10}){
         ForEach(this.localPlayLists,(item:PlayListModel)=>{
-          PlayListItem({playList:item,inWhichPage:'music',onSelectPlayList:this.onSelectPlayList})
+          PlayListItem({playList:item,onSelectPlayList:this.onSelectPlayList})
         },(item:PlayListModel)=>item.id.toString())
       }
       .scrollBar(BarState.Off)

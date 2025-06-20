@@ -1,4 +1,4 @@
-import { PromptAction, router } from '@kit.ArkUI'
+import { LengthMetrics, PromptAction, router } from '@kit.ArkUI'
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { numberToTime } from '../common/utils/CommonTools'
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
@@ -6,6 +6,9 @@ import log from '@open/log'
 import { PlayListModel, routerParams, SongModel, PlayMode } from '../models/DataModels'
 import { TopNavBar } from '../components/common/TopNavBar'
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
+import { playListDB } from '../db/playListDB'
+import { relationalStore } from '@kit.ArkData'
+import { SongListItem } from '../components/common/SongListItem'
 
 //歌曲播放页面
 @Entry
@@ -18,6 +21,7 @@ struct Play {
   //播放列表弹窗用
   @State playListHeight: string = '0%'
   @State playListOpacity: number = 0
+  @State showSongList:boolean = false
   @State visible:Visibility = Visibility.None  //控制播放列表的遮罩层
   private animationDuration:number = 300
   //懒加载数据
@@ -104,6 +108,77 @@ struct Play {
       this.currentPlayList.songs.splice(index,1)
       AppStorage.setOrCreate('currentPlayList',this.currentPlayList)  //修改后要重新存到全局
     }
+  }
+
+  addSong2Local = async (song:SongModel)=>{
+    //获取所有本地列表
+    const myPlayLists = await playListDB.queryData('PLAYLIST')
+    if(myPlayLists.length === 0){ //没有本地歌单，那么就弹窗提示
+      this.getUIContext().showAlertDialog({
+        title: '暂无本地歌单',
+        message: '请先添加歌单/专辑到本地歌单，或者在个人中心新建歌单',
+        autoCancel: true,
+        primaryButton: {
+          value: '取消',
+          fontColor:$r('app.color.text_light'),
+          action: () => {}
+        },
+        secondaryButton: {
+          value: '去个人中心',
+          fontColor:$r('app.color.edit'),
+          action: () => {
+            this.showSongList = false
+            router.pushUrl({
+              url:'pages/My'
+            })
+          }
+        }
+      })
+      return
+    }
+    const playListNames:string[] = []
+    myPlayLists.forEach(item=>{
+      playListNames.push(item.name)
+    })
+    //选择本地歌单弹窗
+    this.getUIContext().showTextPickerDialog({
+      range: playListNames,
+      selected: 0,
+      canLoop: false,
+      cancelButtonStyle:{fontColor:$r('app.color.disabled')},
+      onAccept: async (value: TextPickerResult) => {
+        const index = value.index as number //选择的索引
+        //取出当前选择的歌单
+        const resPlayList = await playListDB.queryData('PLAYLIST', undefined, myPlayLists[index].id)
+        let selectedPlayList = resPlayList[0]
+        //看看选择的歌单中是否已经有该歌曲
+        const duplicated = selectedPlayList.songs.some(item=>item.id === song.id)
+        if(duplicated){
+          this.promptAction.showToast({
+            message: '该歌单已有此歌曲',
+            duration: BasicConstants.TOASTDURATION
+          })
+          return
+        }
+        selectedPlayList.songs.unshift(song)  //把这首歌加进去
+        const valueBucket: relationalStore.ValuesBucket = {
+          SONGS:JSON.stringify(selectedPlayList.songs),
+          SAVETIME: new Date().getTime()
+        };
+        const res = await playListDB.updateDataById('PLAYLIST',myPlayLists[index].id,valueBucket) //更新到数据库
+        if(res.code === 0){ //成功
+          this.promptAction.showToast({
+            message: res.message,
+            duration: BasicConstants.TOASTDURATION
+          })
+        }else { //失败
+          this.promptAction.showToast({
+            message: res.message,
+            duration: BasicConstants.TOASTDURATION
+          })
+        }
+      }
+    });
   }
 
   @Builder deleteButton(index: number) {
@@ -235,9 +310,13 @@ struct Play {
         .fillColor(Color.White)
         .width(30)
         .onClick(() => {
-          this.visible = Visibility.Visible
-          this.playListHeight = '100%'
-          this.playListOpacity = 1
+          this.showSongList = true
+        })
+        .bindSheet($$this.showSongList, this.songListBuilder(), {
+          detents:[SheetSize.MEDIUM,SheetSize.LARGE],
+          backgroundColor:$r('app.color.main_tab_background'),
+          showClose:false,
+          radius:{topStart:LengthMetrics.vp(10),topEnd:LengthMetrics.vp(10)}
         })
     }
     .width('100%')
@@ -246,178 +325,162 @@ struct Play {
     })
     .justifyContent(FlexAlign.SpaceAround)
   }
-  @Builder playListBuilder(){
+  @Builder songListBuilder(){
     Column() {
-      Column(){
-        //阴影
-      }
-      .backgroundColor('#32ffffff')
-      .width(BasicConstants.FULL_WIDTH)
-      .height('40%')
-      .onClick(()=>{
-        this.playListHeight = '0%'
-        this.playListOpacity = 0
-      })
-      Column() {
-        //列表头
-        Row({space:10}) {
-          Image($r("app.media.icon_play"))
-            .width(25)
-            .fillColor($r('app.color.icon_svg_selected'))
-          Row() {
-            Text(){
-              Span('播放列表 ')
-                .fontColor($r('app.color.text_default'))
-                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-              Span(`(${this.currentPlayList.songs.length})`)
-                .fontColor($r('app.color.text_light'))
-                .fontSize(BasicConstants.FONT_SIZE_SMALL)
-            }
+      //列表头
+      Row({space:10}) {
+        Image($r("app.media.icon_play"))
+          .width(25)
+          .fillColor($r('app.color.icon_svg_selected'))
+        Row() {
+          Text(){
+            Span('播放列表 ')
+              .fontColor($r('app.color.text_default'))
+              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+            Span(`(${this.currentPlayList.songs.length})`)
+              .fontColor($r('app.color.text_light'))
+              .fontSize(BasicConstants.FONT_SIZE_SMALL)
           }
-          .margin({left:5})
-          .layoutWeight(1)
-          Image($r("app.media.icon_arrow_down"))
-            .fillColor('#ffa49a9a')
-            .width(25)
-            .height(25)
-            .onClick(() => {
-              this.playListHeight = '0%'
-              this.playListOpacity = 0
-            })
         }
-        .padding({
-          left:10,
-          right:10
-        })
-        .width(BasicConstants.FULL_WIDTH)
-        .height(60)
-        .alignItems(VerticalAlign.Center)
-        .border({
-          width: { bottom: 1 },
-          color:$r('app.color.list_divider')
-        })
-        // 播放列表
-        List() {
-          LazyForEach(this.musicLazyData, (item: SongModel, index: number) => {
-            ListItem() {
-              Row({space:10}) {
-                Row(){
-                  if(item.id === this.currentSong.id){
-                    Image($r('app.media.icon_playing'))
-                      .width(20)
-                      .fillColor($r('app.color.icon_svg_selected'))
-                  }else{
-                    Text((index + 1).toString())
-                      .fontColor($r('app.color.text_light'))
-                  }
-                }
-                .width(30)
-                Row() {
-                  Column({ space: 5 }) {
-                    Text(item.name)
-                      .fontSize(BasicConstants.FONT_SIZE_SMALL)
-                      .fontColor(item.id === this.currentSong.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_default'))
-                      .maxLines(1)
-                      .textOverflow({overflow:TextOverflow.Ellipsis})
-                    Text(item.artistName.toString())
-                      .fontSize(BasicConstants.FONT_SIZE_SMALL)
-                      .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_light'))
-                      .maxLines(1)
-                      .textOverflow({overflow:TextOverflow.Ellipsis})
-                  }
-                  .alignItems(HorizontalAlign.Start)
-                  .justifyContent(FlexAlign.Center)
-                }
-                .onClick(()=>{
-                  this.changeSong(index)
-                })
-                .layoutWeight(1)
-                Row(){
-                  Image($r('app.media.icon_add'))
-                    .width(20)
-                    .height(20)
-                    .fillColor($r('app.color.icon_svg_selected'))
-                }
-              }
-              .height(60)
-              .padding({
-                left:10,
-                right:10
-              })
-              .height(60)
-              .width(BasicConstants.FULL_WIDTH)
-              .alignItems(VerticalAlign.Center)
-            }
-            .swipeAction({
-              end: this.deleteButton(index)
-            })
-            .border({
-              width: { bottom: 1 },
-              color:$r('app.color.list_divider')
-            })
-          },(item:SongModel)=>item.id.toString())
-        }
-        .edgeEffect(EdgeEffect.None)
-        .scrollBar(BarState.Off)
-        .fadingEdge(true)
+        .margin({left:5})
         .layoutWeight(1)
+        Image($r("app.media.icon_arrow_down"))
+          .fillColor('#ffa49a9a')
+          .width(25)
+          .height(25)
+          .onClick(() => {
+            this.showSongList = false
+          })
       }
+      .width(BasicConstants.FULL_WIDTH)
+      .height(60)
+      .alignItems(VerticalAlign.Center)
+      .border({
+        width: { bottom: 1 },
+        color:$r('app.color.list_divider')
+      })
+      .padding({
+        left:10,
+        right:10
+      })
+      // 播放列表
+      List() {
+        LazyForEach(this.musicLazyData, (item: SongModel, index: number) => {
+          ListItem() {
+            SongListItem({song:item,currentSongId:this.currentSong.id,index:index,playList:this.currentPlayList,changeSong:this.changeSong,addSong2Local:this.addSong2Local})
+            // Row({space:10}) {
+            //   Row(){
+            //     if(item.id === this.currentSong.id){
+            //       Image($r('app.media.icon_playing'))
+            //         .width(20)
+            //         .fillColor($r('app.color.icon_svg_selected'))
+            //     }else{
+            //       Text((index + 1).toString())
+            //         .fontColor($r('app.color.text_light'))
+            //     }
+            //   }
+            //   .width(30)
+            //   Row() {
+            //     Column({ space: 5 }) {
+            //       Text(item.name)
+            //         .fontSize(BasicConstants.FONT_SIZE_SMALL)
+            //         .fontColor(item.id === this.currentSong.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_default'))
+            //         .maxLines(1)
+            //         .textOverflow({overflow:TextOverflow.Ellipsis})
+            //       Text(item.artistName.toString())
+            //         .fontSize(BasicConstants.FONT_SIZE_SMALL)
+            //         .fontColor(item.id === this.currentSong?.id ? $r('app.color.icon_svg_selected') : $r('app.color.text_light'))
+            //         .maxLines(1)
+            //         .textOverflow({overflow:TextOverflow.Ellipsis})
+            //     }
+            //     .alignItems(HorizontalAlign.Start)
+            //     .justifyContent(FlexAlign.Center)
+            //   }
+            //   .onClick(()=>{
+            //     this.changeSong(index)
+            //   })
+            //   .layoutWeight(1)
+            //   Row(){
+            //     Image($r('app.media.icon_add'))
+            //       .width(20)
+            //       .height(20)
+            //       .fillColor($r('app.color.icon_svg_selected'))
+            //       .onClick(()=>{
+            //         this.addSong2Local(item)
+            //       })
+            //   }
+            // }
+            // .padding({
+            //   left:10,
+            //   right:10
+            // })
+            // .height(60)
+            // .width(BasicConstants.FULL_WIDTH)
+            // .alignItems(VerticalAlign.Center)
+          }
+          .swipeAction({
+            end: this.deleteButton(index)
+          })
+          .border({
+            width: { bottom: 1 },
+            color:$r('app.color.list_divider')
+          })
+        },(item:SongModel)=>item.id.toString())
+      }
+      .edgeEffect(EdgeEffect.None)
+      .scrollBar(BarState.Off)
+      .fadingEdge(true)
       .layoutWeight(1)
-      .backgroundColor($r('app.color.content_background'))
     }
-    .opacity(this.playListOpacity)
-    .height(this.playListHeight)
-    .animation({
-      duration: this.animationDuration
-    })
     .width(BasicConstants.FULL_WIDTH)
+    .padding({
+      left:10,
+      right:10
+    })
   }
 
   build() {
-    Stack({ alignContent: Alignment.Bottom }){
-      Stack({alignContent:Alignment.Top}){
-        // 变色背景
-        Image(this.currentSong.showPic)
-          .width(BasicConstants.FULL_WIDTH)
-          .height(BasicConstants.FULL_HEIGHT)
-          .blur(1000)
-        Column(){
-          //返回按钮
-          Row(){
-            TopNavBar({color:'#ffffff'})
-          }
-          .width(BasicConstants.FULL_WIDTH)
-          .padding({left:10})
-          Column(){
-            //封面
-            this.coverImgBuilder()
-            //歌曲信息
-            Column({space:10}){
-              Text(this.currentSong.name)
-                .fontColor('#fcfcfc')
-                .fontSize(BasicConstants.FONT_SIZE_LARGE)
-              Text(this.currentSong.artistName.toString())
-                .fontColor('#fcfcfc')
-                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-            }
-            .margin({top:20})
-            .width(BasicConstants.FULL_WIDTH)
-            .padding({left:20,right:20})
-
-            Column() {
-              //进度条
-              this.processBarBuilder()
-              //播放按钮
-              this.playButtonsBuilder()
-            }
-            .width(BasicConstants.FULL_WIDTH)
-          }
+    Stack({alignContent:Alignment.Top}){
+      // 变色背景
+      Image(this.currentSong.showPic)
+        .width(BasicConstants.FULL_WIDTH)
+        .height(BasicConstants.FULL_HEIGHT)
+        .blur(1000)
+      Column(){
+        //返回按钮
+        Row(){
+          TopNavBar({color:'#ffffff'})
         }
-        .padding({
-          top:this.safeTop
-        })
+        .width(BasicConstants.FULL_WIDTH)
+        .padding({left:10})
+        Column(){
+          //封面
+          this.coverImgBuilder()
+          //歌曲信息
+          Column({space:10}){
+            Text(this.currentSong.name)
+              .fontColor('#fcfcfc')
+              .fontSize(BasicConstants.FONT_SIZE_LARGE)
+            Text(this.currentSong.artistName.toString())
+              .fontColor('#fcfcfc')
+              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+          }
+          .margin({top:20})
+          .width(BasicConstants.FULL_WIDTH)
+          .padding({left:20,right:20})
+
+          Column() {
+            //进度条
+            this.processBarBuilder()
+            //播放按钮
+            this.playButtonsBuilder()
+          }
+          .width(BasicConstants.FULL_WIDTH)
+        }
       }
-      this.playListBuilder()
+      .padding({
+        top:this.safeTop
+      })
     }
     .width(BasicConstants.FULL_WIDTH)
     .height(BasicConstants.FULL_HEIGHT)

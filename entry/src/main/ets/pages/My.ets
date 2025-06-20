@@ -4,7 +4,7 @@ import { playListDB } from "../db/playListDB"
 import {  PlayListModel } from "../models/DataModels"
 import { LengthMetrics, PromptAction, router } from "@kit.ArkUI"
 import { TopNavBar } from "../components/common/TopNavBar"
-import { PlayListItem } from "../components/My/PlayListItem"
+import { PlayListItem } from "../components/common/PlayListItem"
 
 //我的页面
 @Entry
