@@ -44,12 +44,12 @@ export struct My {
               this.myPlayLists = this.oriMyPlayLists.slice(0,3)
               this.promptAction.showToast({
                 message: '删除歌单成功',
-                duration: BasicConstants.TOASTDURATION
+                duration: BasicConstants.TOAST_DURATION
               })
             }else { //失败
               this.promptAction.showToast({
                 message: '删除歌单失败',
-                duration: BasicConstants.TOASTDURATION
+                duration: BasicConstants.TOAST_DURATION
               })
             }
           }

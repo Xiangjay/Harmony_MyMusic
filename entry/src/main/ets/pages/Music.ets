@@ -110,7 +110,6 @@ struct Music {
   getLocalPlayListDetail = async (id:number) => {
     const res = await playListDB.queryData('PLAYLIST',undefined,id)
     this.playList = res[0]
-    log.info(this.playList.publishTime)
     const songIds:number[] = []
     this.playList.songs.forEach((song:SongModel)=>{
       songIds.push(song.id)
@@ -198,27 +197,27 @@ struct Music {
         case 1:
           this.promptAction.showToast({
             message: '歌单保存失败，请稍后重试',
-            duration: BasicConstants.TOASTDURATION,
+            duration: BasicConstants.TOAST_DURATION,
           })
           break;
         case -1:
           this.promptAction.showToast({
             message: '程序异常，请稍后重试',
-            duration: BasicConstants.TOASTDURATION,
+            duration: BasicConstants.TOAST_DURATION,
             textColor: Color.Red
           })
           break;
         default:
           this.promptAction.showToast({
             message: '歌单保存成功，可前往个人中心查看',
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
           break;
       }
     }else {
       this.promptAction.showToast({
         message: '该歌单已存在',
-        duration: BasicConstants.TOASTDURATION
+        duration: BasicConstants.TOAST_DURATION
       })
     }
   }
@@ -267,7 +266,7 @@ struct Music {
         if(duplicated){
           this.promptAction.showToast({
             message: '该歌单已有此歌曲',
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
           return
         }
@@ -280,12 +279,12 @@ struct Music {
         if(res.code === 0){ //成功
           this.promptAction.showToast({
             message: res.message,
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
         }else { //失败
           this.promptAction.showToast({
             message: res.message,
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
         }
       }

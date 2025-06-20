@@ -8,11 +8,11 @@ export struct Loading {
     Row() {
       if(this.showIcon){
         LoadingProgress()
-          .color('#91ee91')
+          .color($r('app.color.edit'))
           .width(50).height(50)
-        Text('努力加载中......')
+        Text($r('app.string.loading'))
           .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-          .fontColor('#91ee91')
+          .fontColor($r('app.color.edit'))
       }
     }
   }

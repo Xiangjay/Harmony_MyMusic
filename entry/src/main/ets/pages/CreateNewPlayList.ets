@@ -68,24 +68,24 @@ struct CreateNewPlayList {
         case 1:
           this.promptAction.showToast({
             message: '创建歌单失败，请稍后重试',
-            duration: BasicConstants.TOASTDURATION,
+            duration: BasicConstants.TOAST_DURATION,
           })
           break;
         case -1:
           this.promptAction.showToast({
             message: '程序异常，请稍后重试',
-            duration: BasicConstants.TOASTDURATION,
+            duration: BasicConstants.TOAST_DURATION,
             textColor: Color.Red
           })
           break;
         default:
           this.promptAction.showToast({
             message: '创建歌单成功',
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
           setTimeout(()=>{
             router.back()
-          },BasicConstants.TOASTDURATION)
+          },BasicConstants.TOAST_DURATION)
           break;
       }
     }else {
@@ -101,15 +101,15 @@ struct CreateNewPlayList {
       if(res.code === 0){ //成功
         this.promptAction.showToast({
           message: '更新歌单成功',
-          duration: BasicConstants.TOASTDURATION
+          duration: BasicConstants.TOAST_DURATION
         })
         setTimeout(()=>{
           router.back()
-        },BasicConstants.TOASTDURATION)
+        },BasicConstants.TOAST_DURATION)
       }else { //失败
         this.promptAction.showToast({
           message: '更新歌单失败',
-          duration: BasicConstants.TOASTDURATION
+          duration: BasicConstants.TOAST_DURATION
         })
       }
     }
@@ -190,12 +190,12 @@ struct CreateNewPlayList {
       }
       Button('保存')
         .width(100)
-        .fontColor($r('app.color.edit'))
+        .fontColor($r('app.color.warning'))
         .fontWeight(FontWeight.Bold)
         .fontSize(BasicConstants.FONT_SIZE_NORMAL)
         .backgroundColor(Color.Transparent)
         .borderWidth(2)
-        .borderColor($r('app.color.edit'))
+        .borderColor($r('app.color.warning'))
         .enabled(this.name !== '' && this.picUrl !== '' && this.dataChanged)
         .onClick(this.onSave)
     }

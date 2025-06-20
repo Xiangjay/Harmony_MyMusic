@@ -62,7 +62,6 @@ struct Index {
       }
       .tabBar(this.tabBarBuilder('MV',2,$r("app.media.icon_mv")))
       TabContent(){
-
       }
       .tabBar(this.tabBarBuilder('我的',3,$r("app.media.icon_my")))
     }

@@ -15,6 +15,10 @@
     {
       "name": "grant_location",
       "value": "用于测试地理位置"
+    },
+    {
+      "name": "loading",
+      "value": "努力加载中......"
     }
   ]
 }

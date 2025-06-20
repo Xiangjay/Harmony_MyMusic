@@ -156,7 +156,7 @@ struct Play {
         if(duplicated){
           this.promptAction.showToast({
             message: '该歌单已有此歌曲',
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
           return
         }
@@ -169,12 +169,12 @@ struct Play {
         if(res.code === 0){ //成功
           this.promptAction.showToast({
             message: res.message,
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
         }else { //失败
           this.promptAction.showToast({
             message: res.message,
-            duration: BasicConstants.TOASTDURATION
+            duration: BasicConstants.TOAST_DURATION
           })
         }
       }

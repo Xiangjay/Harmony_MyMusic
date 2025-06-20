@@ -29,7 +29,7 @@ export struct SideBar {
     },
     secondaryButton: {
       value: '浅色',
-      fontColor:'#86868f',
+      fontColor:'#c0c0c0',
       action: () => {
         this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT);
         preferencesUtil.insertData('theme','light')

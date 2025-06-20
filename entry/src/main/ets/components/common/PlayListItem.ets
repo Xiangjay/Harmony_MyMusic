@@ -3,6 +3,14 @@ import { BasicConstants } from '../../common/constants/BasicConstants'
 import { musicRouterParamsModel, PlayListModel, playListType } from '../../models/DataModels'
 import { router} from '@kit.ArkUI'
 
+@Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
+  .fontSize(fontSize)
+  .fontColor($r('app.color.text_default'))
+  .width(BasicConstants.FULL_WIDTH)
+  .maxLines(2)
+  .textOverflow({ overflow: TextOverflow.Ellipsis })
+}
+
 @Component
 export struct PlayListItem {
   @ObjectLink playList:PlayListModel
@@ -20,17 +28,17 @@ export struct PlayListItem {
             .height(120)
             .borderRadius(5)
           Column(){
-            Text(this.playList.name)
-              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-              .fontColor($r('app.color.text_default'))
-              .maxLines(2)
-              .textOverflow({overflow:TextOverflow.Ellipsis})
-            Text(this.playList.description)
-              .fontSize(BasicConstants.FONT_SIZE_SMALL)
-              .fontColor($r('app.color.text_default'))
-              .maxLines(2)
-              .textOverflow({overflow:TextOverflow.Ellipsis})
-              .opacity(0.8)
+            Column({space:5}){
+              Text(this.playList.name)
+                .coverText()
+              Text(this.playList.description)
+                .coverText(BasicConstants.FONT_SIZE_SMALL)
+                .opacity(0.8)
+              Text(this.playList.tags.toString())
+                .coverText(BasicConstants.FONT_SIZE_SMALL)
+                .opacity(0.6)
+            }
+            .alignItems(HorizontalAlign.Start)
             Text(`${this.playList.songs.length} 首`)
               .fontSize(BasicConstants.FONT_SIZE_NORMAL)
               .fontColor($r('app.color.text_default'))
