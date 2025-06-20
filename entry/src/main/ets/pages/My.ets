@@ -1,8 +1,8 @@
 import log from "@open/log"
 import { BasicConstants } from "../common/constants/BasicConstants"
 import { playListDB } from "../db/playListDB"
-import {  LocalPlayListModel } from "../models/DataModels"
-import { PromptAction, router } from "@kit.ArkUI"
+import {  PlayListModel } from "../models/DataModels"
+import { LengthMetrics, PromptAction, router } from "@kit.ArkUI"
 import { TopNavBar } from "../components/common/TopNavBar"
 import { PlayListItem } from "../components/My/PlayListItem"
 
@@ -11,11 +11,11 @@ import { PlayListItem } from "../components/My/PlayListItem"
 @Component
 export struct My {
   @StorageProp('safeTop') safeTop: number = 0;
-  @State oriMyPlayLists:Array<LocalPlayListModel> = []
-  @State myPlayLists:Array<LocalPlayListModel> = []
+  @State oriMyPlayLists:Array<PlayListModel> = []
+  @State myPlayLists:Array<PlayListModel> = []
+  @State showAll:boolean = false
   private uiContext: UIContext = this.getUIContext();
   private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
-  private toastDuration:number = 500  //提示弹窗显示时间
 
   getMyPlayLists = async ()=>{
     this.oriMyPlayLists = await playListDB.queryData('PLAYLIST')
@@ -43,13 +43,13 @@ export struct My {
               this.oriMyPlayLists.splice(index,1)
               this.myPlayLists = this.oriMyPlayLists.slice(0,3)
               this.promptAction.showToast({
-                message: res.message,
-                duration: this.toastDuration
+                message: '删除歌单成功',
+                duration: BasicConstants.TOASTDURATION
               })
             }else { //失败
               this.promptAction.showToast({
-                message: res.message,
-                duration: this.toastDuration
+                message: '删除歌单失败',
+                duration: BasicConstants.TOASTDURATION
               })
             }
           }
@@ -79,29 +79,51 @@ export struct My {
             .fontColor($r('app.color.text_light'))
         }
         .alignItems(VerticalAlign.Center)
-        Row(){
-          Text('查看全部')
-            .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-            .fontColor(this.oriMyPlayLists.length > 3 ? $r('app.color.edit') : $r('app.color.disabled'))
-          Image($r('app.media.icon_arrow_right'))
-            .fillColor(this.oriMyPlayLists.length > 3 ? $r('app.color.edit') : $r('app.color.disabled'))
-            .width(20)
-            .height(20)
-        }
-        .onClick(()=>{
-          router.pushUrl({
-            url:'pages/MyPlayList'
+        Row({space:20}){
+          Row({space:5}){
+            Text('新建')
+              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+              .fontColor($r('app.color.edit'))
+            Image($r('app.media.icon_add'))
+              .fillColor($r('app.color.edit'))
+              .width(20)
+              .height(20)
+          }
+          .onClick(()=>{
+            router.pushUrl({
+              url:'pages/CreateNewPlayList',
+            })
           })
-        })
+          Row(){
+            Text('查看全部')
+              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+              .fontColor(this.oriMyPlayLists.length > 3 ? $r('app.color.edit') : $r('app.color.disabled'))
+            Image($r('app.media.icon_arrow_right'))
+              .fillColor(this.oriMyPlayLists.length > 3 ? $r('app.color.edit') : $r('app.color.disabled'))
+              .width(20)
+              .height(20)
+          }
+          .onClick(()=>{
+            if(this.oriMyPlayLists.length>3){
+              this.showAll = true
+            }
+          })
+          .bindSheet($$this.showAll, this.allPlayListsBuilder(), {
+            title:{title:'全部歌单'},
+            height:'80%',
+            showClose:true,
+            radius:{topStart:LengthMetrics.vp(10),topEnd:LengthMetrics.vp(10)}
+          })
+        }
       }
       .padding({right:10})
       .width(BasicConstants.FULL_WIDTH)
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
       List({space:10}){
-        ForEach(this.myPlayLists,(item:LocalPlayListModel)=>{
+        ForEach(this.myPlayLists,(item:PlayListModel)=>{
           PlayListItem({playList:item,deletePlayList:this.deletePlayList})
-        },(item:LocalPlayListModel)=>item.id.toString())
+        },(item:PlayListModel)=>item.id.toString())
       }
       .padding({right:10})
       .scrollBar(BarState.Off)
@@ -110,6 +132,24 @@ export struct My {
       .width(BasicConstants.FULL_WIDTH)
     }
     .margin({top:20})
+  }
+  @Builder allPlayListsBuilder(){
+    Column({space:10}){
+      List({space:10}){
+        ForEach(this.oriMyPlayLists,(item:PlayListModel)=>{
+          PlayListItem({playList:item,deletePlayList:this.deletePlayList})
+        },(item:PlayListModel)=>item.id.toString())
+      }
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
+      .fadingEdge(true)
+      .width(BasicConstants.FULL_WIDTH)
+    }
+    .padding({
+      left:10,
+      right:10,
+      bottom:20
+    })
   }
 
   build() {

@@ -8,6 +8,6 @@
     "pages/MV",
     "pages/PlayMV",
     "pages/My",
-    "pages/MyPlayList"
+    "pages/CreateNewPlayList"
   ]
 }

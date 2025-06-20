@@ -1,5 +1,4 @@
-import { router } from '@kit.ArkUI'
-import {getSingerDetailById} from '../common/apis/MusicApis'
+import { PromptAction, router } from '@kit.ArkUI'
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { numberToTime } from '../common/utils/CommonTools'
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
@@ -23,23 +22,25 @@ struct Play {
   private animationDuration:number = 300
   //懒加载数据
   private musicLazyData:MyLazyDataSource<SongModel> = new MyLazyDataSource()
-
-  //通过当前歌曲的歌手Id，获取歌手图片，这里如果是合唱的话默认显示第一位歌手图片
-  getSingerById = async () =>{
-    // const singerId = this.currentSong.artists[0].id
-    // const res = await getSingerDetailById<responseSinger,null>(singerId)
-    // this.currentSong.showPic = res.data.artist.cover
-  }
+  private uiContext: UIContext = this.getUIContext();
+  private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
 
   aboutToAppear(): void {
     this.currentSong = (router.getParams() as routerParams<SongModel>).param
     this.playIndex = this.currentPlayList.songs.findIndex(song=>song.id === this.currentSong.id)
     //把数据放入懒加载数据类型中
     this.musicLazyData.pushAllData(this.currentPlayList.songs)
-    if(!this.currentSong.showPic){  //如果没有专辑封面那就用歌手头像当歌曲图片
-      this.getSingerById()
+    if(this.currentSong.url){
+      avPlayerManager.playSong(this.currentSong)
+    }else {
+      this.promptAction.showToast({
+        message: '抱歉此歌无版权，暂不可播放',
+        duration: 500
+      })
+      setTimeout(()=>{
+        router.back()
+      },1000)
     }
-    avPlayerManager.playSong(this.currentSong)
   }
 
   playPrev(){
@@ -72,6 +73,11 @@ struct Play {
         }
         break;
     }
+    this.currentSong = this.currentPlayList.songs[this.playIndex]
+    avPlayerManager.playSong(this.currentSong)
+  }
+  changeSong = (index:number)=>{
+    this.playIndex = index
     this.currentSong = this.currentPlayList.songs[this.playIndex]
     avPlayerManager.playSong(this.currentSong)
   }
@@ -323,7 +329,7 @@ struct Play {
                   .justifyContent(FlexAlign.Center)
                 }
                 .onClick(()=>{
-                  avPlayerManager.playSong(item)
+                  this.changeSong(index)
                 })
                 .layoutWeight(1)
                 Row(){

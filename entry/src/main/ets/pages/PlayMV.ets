@@ -34,7 +34,7 @@ struct PlayMV {
     const mvUrl = await getMvUrlById<MVModel,null>(mvId)  //拿到MV播放地址
     mv = myDataMerge<MVModel>(mv,mvUrl.data)
     const avatar = await getSingerDetailById<responseArtistModel,null>(mv.artistId) //拿到MV歌手头像
-    mv.artistAvatar = avatar.data.artist.avatar
+    mv.artistAvatar = avatar.data.artist.picUrl
     mv.controller = new VideoController() //初始化MvController，也是因为可选属性，上面new的时候没有初始化
     this.mvList.push(mv)
     if(this.mvList.length === this.routerParams.mvList.length){ //所有mv数据都拿完了

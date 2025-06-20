@@ -93,7 +93,7 @@ class B{
   gender:string = 'male'
 }
 
-//把请求返回的数据类型转换成程序需要的数据类型
+//把请求返回的数据类型转换成程序需要的数据类型，只能转换一层
 export function myDataMerge<T>(target: Object, source: Object,specificKeys?:SpecificKey[]):T{
   for (const key of Object.keys(target)) {
     if(Reflect.has(source,key)){

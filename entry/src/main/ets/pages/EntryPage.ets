@@ -11,6 +11,8 @@ struct EntryPage {
   @StorageProp('safeTop') safeTop: number = 0;
   @StorageProp(BreakPointConstants.CURRENT_BREAKPOINT) currentBreakPoint: string = BreakPointConstants.BREAKPOINT_SM
   @State timeLeft: number = 1
+  @State entryImages:ResourceStr[] = [$r('app.media.entry_Img1'),$r('app.media.entry_Img2')]
+  @State entryImage:ResourceStr = ''
   private intervalId: number = 0
   //从用户首选项中拿用户设定的主题，如果拿不到theme代表用户第一次进入该应用，要让用户选择主题
   @State theme:preferences.ValueType = preferencesUtil.getData('theme')
@@ -63,6 +65,8 @@ struct EntryPage {
     }, 1000)
   }
   aboutToAppear(): void {
+    const randomImage:number = Math.floor(Math.random())
+    this.entryImage = randomImage < 5 ? this.entryImages[0] : this.entryImages[1]
     //用户第一次进入该APP时，让用户选择主题
     if(!this.theme){
       this.dialogController.open()
@@ -77,7 +81,7 @@ struct EntryPage {
 
   build() {
     Stack({alignContent:Alignment.TopEnd}){
-      Image($r('app.media.ad'))
+      Image(this.entryImage)
         .width(BasicConstants.FULL_WIDTH)
         .height(BasicConstants.FULL_HEIGHT)
       Button('跳过 ' + this.timeLeft)

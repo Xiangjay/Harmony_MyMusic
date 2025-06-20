@@ -3,7 +3,7 @@ import { BasicConstants } from "../../common/constants/BasicConstants";
 @CustomDialog
 @Component
 export struct EditDialog {
-  @Prop playListName:string //这里如果用@Link接收会闪退
+  @Prop playListName:string = '' //这里如果用@Link接收会闪退
   controller?: CustomDialogController;  //不能删，会报错
   private confirm = (name:string)=>{} //这里要把改后的结果通过参数传回去
   private cancel = ()=>{}

@@ -26,14 +26,7 @@ export enum playListType{
   album = 'album',
   local = 'local'
 }
-@Observed
-export class LocalPlayListModel{
-  id:number = 0
-  name:string = ''
-  songs:SongModel[] = []
-  picUrl:string = ''
-  saveTime:number = 0 //个人中心用
-}
+
 //程序需要的歌单数据类型
 @Observed
 export class PlayListModel{
@@ -43,13 +36,12 @@ export class PlayListModel{
   picUrl:string = ''
   playMode:PlayMode = PlayMode.auto //播放模式
   playCount:number = 0
-  trackCount:number = 0
   description:string = ''
   tags:string[] = []
   commentCount:number = 0
   shareCount:number = 0
-  artist?:Artist = new Artist() //专辑用
-  publishTime?:number = 0 //专辑用
+  artist:Artist = new Artist() //专辑用
+  publishTime:number = 0 //专辑用
   saveTime?:number = 0 //个人中心用
 }
 
@@ -66,11 +58,15 @@ export class SongModel{
   isPlaying:boolean = false //播放状态
   time:number = 0   //当前播放时间
   duration:number = 0   //歌曲总时长
-  song?:newSong = new newSong()  //单独给新歌推荐用，为了从里面拿歌手数据
 }
-//单独给新歌推荐用，为了拿到歌手数据
-class newSong {
-  artists:Array<Artist> = []
+//新歌推荐后台返回的数据类型
+export class RecommendSongModel{
+  id:number = 0 //歌曲Id
+  name:string = ''  //歌曲名字
+  url:string = ''   //播放地址
+  picUrl:string = ''
+  duration:number = 0   //歌曲总时长
+  song:SongModel = new SongModel()
 }
 //播放模式
 export enum PlayMode{
@@ -82,7 +78,7 @@ export enum PlayMode{
 export class Artist{
   id:number = 0
   name:string = ''
-  avatar:string = ''
+  picUrl:string = ''
 }
 //专辑
 export class Album{

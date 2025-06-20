@@ -1,15 +1,18 @@
 import { BasicConstants } from '../../common/constants/BasicConstants'
 import {getRecommendSongList,getRecommendMVList, getRecommendNewSongs,
   getRecommendDjPrograms} from '../../common/apis/HomeApis'
-import { countTransform,myDataMerge, SpecificKey } from '../../common/utils/CommonTools'
+import { countTransform,myDataMerge } from '../../common/utils/CommonTools'
 import {Title} from '../common/Title'
 import { router } from '@kit.ArkUI'
 import {PlayListModel,SongModel,recommendDjProgram,musicRouterParamsModel,
   playListType,
   MVModel,
-  mvRouterParamsModel} from '../../models/DataModels'
+  mvRouterParamsModel,
+  RecommendSongModel,
+  Artist} from '../../models/DataModels'
 import { Loading } from '../common/Loading'
 import log from '@open/log'
+import { getSongUrlByIds } from '../../common/apis/MusicApis'
 
 @Component
 export struct Recommend {
@@ -17,6 +20,7 @@ export struct Recommend {
   @State recommendMVList:Array<MVModel> = []
   @State recommendNewSongs:Array<SongModel> = []
   @State recommendDjPrograms:Array<recommendDjProgram> = []
+  @State tempPlayList:PlayListModel = new PlayListModel()
   @State songListItemHeight: number = -1
   @State djListItemHeight: number = -1
   @Link currentIndex:number
@@ -40,19 +44,47 @@ export struct Recommend {
   }
   //获取推荐新歌
   getRecommendNewSons = async () =>{
-    const res = await getRecommendNewSongs<Array<SongModel>,null>()
-    const songSpecificKeys:SpecificKey[] = [
-      {
-        specificKey:'showPic',
-        sourceKey:'picUrl'
-      }
-    ]
+    const res = await getRecommendNewSongs<Array<RecommendSongModel>,null>()
+    const recommendNewSongs:Array<RecommendSongModel> = []
+    const songIds:number[] = []
     res.result.forEach(item=>{
-      this.recommendNewSongs.push(myDataMerge<SongModel>(new SongModel(),item,songSpecificKeys))
+      //这里merge出来太多没用的数据，所以下面处理一下
+      recommendNewSongs.push(myDataMerge<RecommendSongModel>(new RecommendSongModel(),item))
+      songIds.push(item.id)
     })
-    this.recommendNewSongs.forEach((song:SongModel)=>{
-      song.song?.artists.forEach(artist=>{
-        song.artistName.push(artist.name)
+    //把后台返回的数据处理成程序想要的数据类型
+    recommendNewSongs.forEach(item=>{
+      const newSong:SongModel = new SongModel()
+      newSong.id = item.id
+      newSong.name = item.name
+      newSong.duration = item.duration
+      newSong.showPic = item.picUrl
+      item.song.artists.forEach(artist=>{
+        const ar:Artist = new Artist()
+        ar.id = artist.id
+        ar.name = artist.name
+        newSong.artists.push(ar)
+      })
+      if(newSong.artists.length > 1){
+        newSong.artists.forEach(item=>{
+          newSong.artistName.push(item.name)
+        })
+      }else{
+        newSong.artistName.push(newSong.artists[0].name)
+      }
+      newSong.album.id = item.song.album.id
+      newSong.album.name = item.song.album.name
+      newSong.album.picUrl = item.song.album.picUrl
+      this.recommendNewSongs.push(newSong)
+    })
+    //通过歌曲ID获取歌曲播放URL
+    const responseSongUrls = await getSongUrlByIds<Array<SongModel>, null>(songIds)
+    //把拿到的歌曲url赋值到对应的歌曲里，这里其实可以一个循环this.playList.songs[index].url = item.url就行，但是为了以防万一顺序错乱，还是严谨点用两个循环判断下ID
+    responseSongUrls.data.forEach(item=>{
+      this.recommendNewSongs.forEach((song:SongModel)=>{
+        if(item.id === song.id){
+          song.url = item.url
+        }
       })
     })
     this.isLoading = false
@@ -182,9 +214,8 @@ export struct Recommend {
               Image(item.showPic)
                 .width('30%')
                 .onClick(()=>{
-                  const tempPlayList = new PlayListModel()
-                  tempPlayList.songs.push(item)
-                  AppStorage.setOrCreate('currentPlayList',tempPlayList)
+                  this.tempPlayList.songs.push(item)
+                  AppStorage.setOrCreate('currentPlayList',this.tempPlayList)
                   router.pushUrl({
                     url:'pages/Play',
                     params:{

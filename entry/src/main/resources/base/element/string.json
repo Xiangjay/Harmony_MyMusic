@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "我的音乐"
+    },
+    {
+      "name": "grant_location",
+      "value": "用于测试地理位置"
     }
   ]
 }

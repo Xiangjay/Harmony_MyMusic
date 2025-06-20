@@ -1,6 +1,6 @@
 import { relationalStore } from '@kit.ArkData';
 import log from '@open/log';
-import {DataBaseResponseModel, LocalPlayListModel} from '../models/DataModels'
+import {DataBaseResponseModel, PlayListModel} from '../models/DataModels'
 
 //关系型数据库
 class PlayListDBUtils {
@@ -25,8 +25,16 @@ class PlayListDBUtils {
     const SQL_CREATE_TABLE = `CREATE TABLE IF NOT EXISTS ${tableName} (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
     NAME TEXT NOT NULL,
-    PICTURE TEXT,
     SONGS TEXT,
+    PICURL TEXT,
+    PLAYMODE INTEGER,
+    PLAYCOUNT INTEGER,
+    DESCRIPTION TEXT,
+    TAGS TEXT,
+    COMMENTCOUNT INTEGER,
+    SHARECOUNT INTEGER,
+    ARTIST TEXT,
+    PUBLISHTIME INTEGER,
     SAVETIME INTEGER NOT NULL
     )`; // 建表Sql语句, 这里参数里每一行相当于一列
     //(3)初始化数据库，异步
@@ -80,7 +88,7 @@ class PlayListDBUtils {
   * @param column 投影列
   * @param tableName  表名
   */
-  async queryData(tableName: string, column?: Array<string>, id?: number): Promise<Array<LocalPlayListModel>> {
+  async queryData(tableName: string, column?: Array<string>, id?: number): Promise<Array<PlayListModel>> {
     //获取要操作的表
     let predicates = new relationalStore.RdbPredicates(tableName);
     if (id) {
@@ -88,7 +96,7 @@ class PlayListDBUtils {
       predicates.equalTo('ID', id);
     }
     //查询到的所有数据
-    let playList: Array<LocalPlayListModel> = []
+    let playList: Array<PlayListModel> = []
     if (this.rdbStore !== null) {
       //查询数据库是异步的，并且得到一个结果集，我们要把返回的结果集处理成我们想要的数据
       let result = await this.rdbStore.query(predicates,column)
@@ -96,13 +104,29 @@ class PlayListDBUtils {
       while (result.goToNextRow()) { //goToNextRow判断结果集是否有下一条数据
         let id = result.getLong(result.getColumnIndex('ID'))
         let name = result.getString(result.getColumnIndex('NAME'))
-        let picUrl = result.getString(result.getColumnIndex('PICTURE'))
+        let picUrl = result.getString(result.getColumnIndex('PICURL'))
         let songs = result.getString(result.getColumnIndex('SONGS'))
+        let playMode = result.getLong(result.getColumnIndex('PLAYMODE'))
+        let playCount = result.getLong(result.getColumnIndex('PLAYCOUNT'))
+        let description = result.getString(result.getColumnIndex('DESCRIPTION'))
+        let tags = result.getString(result.getColumnIndex('TAGS'))
+        let commentCount = result.getLong(result.getColumnIndex('COMMENTCOUNT'))
+        let shareCount = result.getLong(result.getColumnIndex('SHARECOUNT'))
+        let artist = result.getString(result.getColumnIndex('ARTIST'))
+        let publishTime = result.getLong(result.getColumnIndex('PUBLISHTIME'))
         let saveTime = result.getLong(result.getColumnIndex('SAVETIME'))
-        const temp:LocalPlayListModel = new LocalPlayListModel()
+        const temp:PlayListModel = new PlayListModel()
         temp.id = id
         temp.name = name
         temp.picUrl = picUrl
+        temp.playMode = playMode
+        temp.playCount = playCount
+        temp.description = description
+        temp.tags = JSON.parse(tags)
+        temp.commentCount = commentCount
+        temp.shareCount = shareCount
+        temp.artist = JSON.parse(artist)
+        temp.publishTime = publishTime
         temp.songs = JSON.parse(songs)
         temp.saveTime = saveTime
         playList.push(temp)

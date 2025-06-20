@@ -1,19 +1,31 @@
 import log from '@open/log'
 import { BasicConstants } from '../../common/constants/BasicConstants'
 import { playListDB } from '../../db/playListDB'
-import { LocalPlayListModel, musicRouterParamsModel, playListType, SongModel } from '../../models/DataModels'
+import { musicRouterParamsModel,
+  PlayListModel,
+  playListType, SongModel } from '../../models/DataModels'
 import { PromptAction, router } from '@kit.ArkUI'
 import { relationalStore } from '@kit.ArkData'
 import {EditDialog} from './EditDialog'
 
+@Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
+  .fontSize(fontSize)
+  .fontColor(Color.White)
+  .width(BasicConstants.FULL_WIDTH)
+  .maxLines(2)
+  .textOverflow({ overflow: TextOverflow.Ellipsis })
+}
+
 @Component
 export struct PlayListItem {
-  @ObjectLink playList:LocalPlayListModel
+  @ObjectLink playList:PlayListModel
+  @Prop inWhichPage:string = 'my'
   @State showSongs:boolean = false
   private deletePlayList = (id:number)=>{}  //父组件方法
   private uiContext: UIContext = this.getUIContext();
   private promptAction: PromptAction = this.uiContext.getPromptAction();
   private toastDuration:number = 500  //弹窗显示时间
+  private onSelectPlayList = (id:number)=>{}
 
   onCancel = ()=>{
     this.editDialogController?.close()
@@ -179,22 +191,24 @@ export struct PlayListItem {
         Row({space:10}){
           Image(this.playList.picUrl)
             .width(100)
-            .height(BasicConstants.FULL_HEIGHT)
-            .borderRadius(10)
+            .height(120)
+            .borderRadius(5)
           Column(){
             Text(this.playList.name)
               .fontSize(BasicConstants.FONT_SIZE_NORMAL)
               .fontColor($r('app.color.text_default'))
               .maxLines(2)
               .textOverflow({overflow:TextOverflow.Ellipsis})
+            Text(this.playList.description)
+              .fontSize(BasicConstants.FONT_SIZE_SMALL)
+              .fontColor($r('app.color.text_default'))
+              .maxLines(2)
+              .textOverflow({overflow:TextOverflow.Ellipsis})
+              .opacity(0.8)
             Text(`${this.playList.songs.length} 首`)
               .fontSize(BasicConstants.FONT_SIZE_NORMAL)
               .fontColor($r('app.color.text_default'))
           }
-          .padding({
-            top:10,
-            bottom:10
-          })
           .height(BasicConstants.FULL_HEIGHT)
           .alignItems(HorizontalAlign.Start)
           .justifyContent(FlexAlign.SpaceBetween)
@@ -202,40 +216,47 @@ export struct PlayListItem {
         }
         .layoutWeight(1)
         .onClick(()=>{
-          const param:musicRouterParamsModel = {
-            id:this.playList.id,
-            type:playListType.local,
-          }
-          router.pushUrl({
-            url:'pages/Music',
-            params: {
-              param: param
+          if(this.inWhichPage === 'my'){
+            const param:musicRouterParamsModel = {
+              id:this.playList.id,
+              type:playListType.local,
             }
-          })
+            router.pushUrl({
+              url:'pages/Music',
+              params: {
+                param: param
+              }
+            })
+          }else{
+            this.onSelectPlayList(this.playList.id)
+          }
         })
         Row({space:5}){
-          Image($r('app.media.icon_edit'))
-            .width(20)
-            .height(20)
-            .fillColor($r('app.color.edit'))
-            .onClick(()=>{
-              this.showSongs = true
-            })
-            .bindSheet($$this.showSongs, this.playListDetailBuilder(), {
-              detents: [SheetSize.MEDIUM, SheetSize.LARGE, 200],
-              showClose:false
-            })
-          Image($r('app.media.icon_delete'))
-            .width(20)
-            .height(20)
-            .fillColor($r('app.color.delete'))
-            .onClick(()=>{
-              this.deletePlayList(this.playList.id)
-            })
+          if(this.inWhichPage === 'my'){
+            Image($r('app.media.icon_edit'))
+              .width(20)
+              .height(20)
+              .fillColor($r('app.color.edit'))
+              .onClick(()=>{
+                router.pushUrl({
+                  url:'pages/CreateNewPlayList',
+                  params: {
+                    param: this.playList
+                  }
+                })
+              })
+            Image($r('app.media.icon_delete'))
+              .width(20)
+              .height(20)
+              .fillColor($r('app.color.delete'))
+              .onClick(()=>{
+                this.deletePlayList(this.playList.id)
+              })
+          }
         }
       }
       .width(BasicConstants.FULL_WIDTH)
-      .height(100)
+      .height(120)
     }
   }
 }

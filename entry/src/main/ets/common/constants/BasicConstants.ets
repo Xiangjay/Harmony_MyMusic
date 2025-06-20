@@ -7,5 +7,6 @@ export class BasicConstants{
   static readonly FONT_SIZE_LARGE:number = 20
   static readonly FONT_SIZE_XLARGE:number = 30
   static readonly MAIN_TAB_BAR_HEIGHT:number = 60
+  static readonly TOASTDURATION:number = 1000
   static readonly BASE_URL:string = 'http://localhost:3000'
 }
