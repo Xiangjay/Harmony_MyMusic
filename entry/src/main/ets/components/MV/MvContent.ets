@@ -1,7 +1,7 @@
 import log from '@open/log'
 import { getMvCommentsById } from '../../common/apis/MVApis'
 import { BasicConstants } from '../../common/constants/BasicConstants'
-import { countTransform, formatData, myDataMerge } from '../../common/utils/CommonTools'
+import { countTransform, dayJsFormatData, myDataMerge } from '../../common/utils/CommonTools'
 import { commentsModel, commentsUser, MVModel, responseComments } from '../../models/DataModels'
 import { Loading } from '../common/Loading'
 
@@ -153,7 +153,7 @@ export struct MvContent {
                         Text(item.user.nickname)
                           .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                           .fontColor($r('app.color.text_default'))
-                        Text(formatData(item.time))
+                        Text(dayJsFormatData(item.time))
                           .fontSize(BasicConstants.FONT_SIZE_SMALL)
                           .fontColor($r('app.color.text_default'))
                           .opacity(0.6)

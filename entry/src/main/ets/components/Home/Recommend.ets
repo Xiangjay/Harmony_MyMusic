@@ -58,7 +58,7 @@ export struct Recommend {
       newSong.id = item.id
       newSong.name = item.name
       newSong.duration = item.duration
-      newSong.showPic = item.picUrl
+      newSong.picUrl = item.picUrl
       item.song.artists.forEach(artist=>{
         const ar:Artist = new Artist()
         ar.id = artist.id
@@ -211,7 +211,7 @@ export struct Recommend {
         ForEach(this.recommendNewSongs,(item:SongModel)=>{
           GridItem(){
             Row({space:5}){
-              Image(item.showPic)
+              Image(item.picUrl)
                 .width('30%')
                 .onClick(()=>{
                   this.tempPlayList.songs.push(item)

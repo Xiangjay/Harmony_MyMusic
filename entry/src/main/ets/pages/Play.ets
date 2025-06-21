@@ -200,7 +200,7 @@ struct Play {
       Row() {
         //CD背景图
         Row() {
-          Image(this.currentSong.showPic)
+          Image(this.currentSong.picUrl)
             .width('70%')
             .borderRadius(400)
         }
@@ -442,7 +442,7 @@ struct Play {
   build() {
     Stack({alignContent:Alignment.Top}){
       // 变色背景
-      Image(this.currentSong.showPic)
+      Image(this.currentSong.picUrl)
         .width(BasicConstants.FULL_WIDTH)
         .height(BasicConstants.FULL_HEIGHT)
         .blur(1000)

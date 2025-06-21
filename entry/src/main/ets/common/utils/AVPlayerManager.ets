@@ -1,7 +1,9 @@
 import { media } from "@kit.MediaKit";
 import {SongModel,PlayListModel,PlayMode} from '../../models/DataModels'
 import { aVSessionManger } from "./AVSessionManager";
-import log from '@open/log'
+import { recentSongsDB } from '../../db/recentSongsDB';
+import { relationalStore } from "@kit.ArkData";
+import log from "@open/log";
 
 export class AVPlayerManager{
   //音频播放器
@@ -72,7 +74,7 @@ export class AVPlayerManager{
       this.changeSong(song)
     }
   }
-  //  切换歌曲
+  //切换歌曲
   async changeSong(song:SongModel){
     this.currentSong = song
     this.currentSong.isPlaying = true
@@ -81,6 +83,8 @@ export class AVPlayerManager{
     this.audioPlayer!.url = song.url
     //设置播控数据元数据
     aVSessionManger.setAVMetadata(this.currentSong)
+    //存入最近播放本地数据库
+    this.insertIntoDB()
   }
 
   //调整播放进度
@@ -139,6 +143,36 @@ export class AVPlayerManager{
   //注销播放器
   async release(){
     await this.audioPlayer?.release()
+  }
+
+  //存入本地数据库
+  async insertIntoDB(){
+    const valueBucket: relationalStore.ValuesBucket = {
+      ID:this.currentSong.id,
+      NAME: this.currentSong.name,
+      PICURL: this.currentSong.picUrl,
+      ARTISTS:JSON.stringify(this.currentSong.artists),
+      ARTISTNAME:JSON.stringify(this.currentSong.artistName),
+      ALBUM:JSON.stringify(this.currentSong.album),
+      ISPLAYING:1,
+      TIME:0,
+      DURATION:this.currentSong.duration,
+      SAVETIME:new Date().getTime()
+    }
+    const recentSongs = await recentSongsDB.queryData('RECENT_SONGS')
+    if (recentSongs.length != 0) {
+      const existed = recentSongs.some(item=>item.id === this.currentSong.id)
+      if(!existed){
+        recentSongsDB.insertData('RECENT_SONGS',valueBucket)
+      }else {
+        const valueBucket: relationalStore.ValuesBucket = {
+          SAVETIME:new Date().getTime()
+        }
+        recentSongsDB.updateDataById('RECENT_SONGS',this.currentSong.id,valueBucket)
+      }
+    }else {
+      recentSongsDB.insertData('RECENT_SONGS',valueBucket)
+    }
   }
 }
 

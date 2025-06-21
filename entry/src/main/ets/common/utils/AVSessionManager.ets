@@ -38,7 +38,7 @@ class AVSessionManger{
     this.avSession?.setAVMetadata({
       assetId:song.id.toString(),
       title:song.name,
-      mediaImage:song.showPic,
+      mediaImage:song.picUrl,
       artist:song.artistName.toString(),
       duration:song.duration
     })

@@ -51,13 +51,14 @@ export class SongModel{
   id:number = 0 //歌曲Id
   name:string = ''  //歌曲名字
   url:string = ''   //播放地址
+  picUrl:string = ''     //用于播放音乐时展示的图片
   artists:Array<Artist> = []  //歌手
   artistName:string[] = []   //页面展示用的歌手
-  showPic:string = ''     //用于播放音乐时展示的图片
   album: Album = new Album()   //所属专辑
   isPlaying:boolean = false //播放状态
   time:number = 0   //当前播放时间
   duration:number = 0   //歌曲总时长
+  saveTime?:number = 0 //个人中心用
 }
 //新歌推荐后台返回的数据类型
 export class RecommendSongModel{

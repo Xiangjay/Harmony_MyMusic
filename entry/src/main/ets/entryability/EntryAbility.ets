@@ -6,6 +6,7 @@ import { preferencesUtil } from '../common/utils/PreferencesUtils';
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
 import { aVSessionManger } from '../common/utils/AVSessionManager';
 import {playListDB} from '../db/playListDB'
+import { recentSongsDB } from '../db/recentSongsDB';
 
 const DOMAIN = 0x0000;
 
@@ -20,8 +21,9 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    //初始化播放列表关系型数据库
-    playListDB.initPlayListDB(this.context,'PLAYLIST')
+    //初始化关系型数据库
+    playListDB.initDB(this.context,'PLAYLIST')
+    recentSongsDB.initDB(this.context,'RECENT_SONGS')
     // Main window is created, set main page for this ability
     windowStage.loadContent('pages/EntryPage', (err) => {
       /*

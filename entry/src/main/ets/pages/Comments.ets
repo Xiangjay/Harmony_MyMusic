@@ -1,6 +1,6 @@
 import { router } from '@kit.ArkUI'
 import { BasicConstants } from '../common/constants/BasicConstants'
-import { formatData, myDataMerge } from '../common/utils/CommonTools'
+import { myDataMerge,dayJsFormatData } from '../common/utils/CommonTools'
 import { Loading } from '../components/common/Loading'
 import {
   commentsRouterParamsModel, PlayListModel, playListType, routerParams, commentsModel,
@@ -9,7 +9,6 @@ import {
 import {getCommentsById} from '../common/apis/MusicApis'
 import { MyLazyDataSource } from '../common/utils/MyLazyDataSource'
 import { TopNavBar } from '../components/common/TopNavBar'
-import log from '@open/log'
 
 @Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
   .fontSize(fontSize)
@@ -82,7 +81,7 @@ struct Comments {
       Column() {
         Text(this.playList.name)
           .coverText(BasicConstants.FONT_SIZE_LARGE)
-        Text(this.playList.tags!.toString() || formatData(this.playList.publishTime!) + ' 发行')
+        Text(this.playList.tags!.toString() || dayJsFormatData(this.playList.publishTime) + ' 发行')
           .coverText(BasicConstants.FONT_SIZE_SMALL)
           .opacity(0.6)
         Text(this.playList.description)
@@ -120,7 +119,7 @@ struct Comments {
                       Text(item.user.nickname)
                         .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                         .fontColor($r('app.color.text_default'))
-                      Text(formatData(item.time))
+                      Text(dayJsFormatData(item.time))
                         .fontSize(BasicConstants.FONT_SIZE_SMALL)
                         .fontColor($r('app.color.text_default'))
                         .opacity(0.6)

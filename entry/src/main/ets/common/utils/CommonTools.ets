@@ -1,4 +1,5 @@
-import log from '@open/log'
+import dayjs from '@mui/dayjs'
+
 //把播放量等数字转换成xx.xx万的形式
 export function countTransform(count:number,float=true):string{
   if(count.toString().length >=5){
@@ -82,17 +83,14 @@ export function formatData(timestamp:number, format:string = 'yyyy-mm-dd'){
   }
   return res
 }
-
-class A{
-  id:number = 0
-  name:string = 'aaa'
+//dayjs转换日期
+export function dayJsFormatData(timestamp:number,format:string = 'YYYY-MM-DD'):string{
+  return dayjs(timestamp).format(format)
 }
-class B{
-  id:number = 1
-  name:string = 'bbb'
-  gender:string = 'male'
+//dayjs距今时间
+export function dayJsDiff(timestamp:number):number{
+  return dayjs().diff(dayjs(timestamp), 'day')
 }
-
 //把请求返回的数据类型转换成程序需要的数据类型，只能转换一层
 export function myDataMerge<T>(target: Object, source: Object,specificKeys?:SpecificKey[]):T{
   for (const key of Object.keys(target)) {

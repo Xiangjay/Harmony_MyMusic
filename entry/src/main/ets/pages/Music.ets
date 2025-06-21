@@ -8,7 +8,7 @@ import {
   getAlbumDynamicById
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
-import { countTransform, formatData, myDataMerge, SpecificKey} from "../common/utils/CommonTools";
+import { countTransform, myDataMerge, SpecificKey,dayJsFormatData} from "../common/utils/CommonTools";
 import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType, commentsRouterParamsModel, Artist,} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 import { TopNavBar } from "../components/common/TopNavBar";
@@ -143,7 +143,7 @@ struct Music {
     })
     //处理歌曲图片和歌手名字
     this.playList.songs.forEach((song:SongModel)=>{
-      song.showPic = song.album.picUrl || this.playList.picUrl
+      song.picUrl = song.album.picUrl || this.playList.picUrl
       if(this.playListType === playListType.album){
         song.album.id = this.playList.id
         song.album.name = this.playList.name
@@ -349,12 +349,12 @@ struct Music {
       Column() {
         Text(this.playList.name)
           .coverText(BasicConstants.FONT_SIZE_LARGE)
-        Text(this.playListType === playListType.album ? formatData(this.playList.publishTime) + ' 发行' : this.playList.tags!.toString())
-          .coverText(BasicConstants.FONT_SIZE_SMALL)
-          .opacity(0.6)
         Text(this.playList.description)
           .coverText()
           .opacity(0.8)
+        Text(this.playListType === playListType.album ? dayJsFormatData(this.playList.publishTime) + ' 发行' : this.playList.tags!.toString())
+          .coverText(BasicConstants.FONT_SIZE_SMALL)
+          .opacity(0.6)
       }
       .justifyContent(FlexAlign.SpaceBetween)
       .layoutWeight(1)

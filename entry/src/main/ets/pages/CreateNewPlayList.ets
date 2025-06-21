@@ -62,7 +62,7 @@ struct CreateNewPlayList {
         ARTIST:JSON.stringify(new Artist()),
         PUBLISHTIME:0,
         SAVETIME:new Date().getTime()
-      };
+      }
       const res = await playListDB.insertData('PLAYLIST',valueBucket)
       switch (res.code) {
         case 1:
@@ -96,7 +96,7 @@ struct CreateNewPlayList {
         DESCRIPTION:this.description,
         TAGS:JSON.stringify(this.selectedTags),
         SAVETIME:new Date().getTime()
-      };
+      }
       const res = await playListDB.updateDataById('PLAYLIST',this.playList.id,valueBucket)
       if(res.code === 0){ //成功
         this.promptAction.showToast({

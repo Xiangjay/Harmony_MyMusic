@@ -7,6 +7,7 @@
   },
   "dynamicDependencies": {},
   "dependencies": {
-    "@open/log": "^1.0.0"
+    "@open/log": "^1.0.0",
+    "@mui/dayjs": "^1.11.13"
   }
 }
