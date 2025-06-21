@@ -1,13 +1,14 @@
 import log from "@open/log"
 import { BasicConstants } from "../common/constants/BasicConstants"
 import { playListDB } from "../db/playListDB"
-import {  PlayListModel, SongModel } from "../models/DataModels"
+import { MVModel, mvRouterParamsModel, PlayListModel, SongModel } from "../models/DataModels"
 import { LengthMetrics, PromptAction, router } from "@kit.ArkUI"
 import { TopNavBar } from "../components/common/TopNavBar"
 import { PlayListItem } from "../components/common/PlayListItem"
 import { recentSongsDB } from "../db/recentSongsDB"
 import { getSongUrlByIds } from "../common/apis/MusicApis"
-import {dayJsDiff} from '../common/utils/CommonTools'
+import { countTransform, dayJsDiff} from '../common/utils/CommonTools'
+import { recentMVsDB } from "../db/recentMVsDB"
 
 
 //我的页面
@@ -17,11 +18,13 @@ export struct My {
   @StorageProp('safeTop') safeTop: number = 0;
   @State oriMyPlayLists:Array<PlayListModel> = []
   @State myPlayLists:Array<PlayListModel> = []
-  @State recentSongs:Array<SongModel> = []
   @State showAllPlayList:boolean = false
+  @State recentSongs:Array<SongModel> = []
   @State showAllRecentSongs:boolean = false
   @State tempPlayList:PlayListModel = new PlayListModel()
   @StorageProp('currentSong') currentSong: SongModel = new SongModel()
+  @State showAllRecentMVs:boolean = false
+  @State recentMVs:Array<MVModel> = []
   private uiContext: UIContext = this.getUIContext();
   private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
 
@@ -47,6 +50,12 @@ export struct My {
       })
     })
     this.tempPlayList.songs.push(...this.recentSongs)
+  }
+  getRecentMVs = async ()=>{
+    const recentMVs = await recentMVsDB.queryData('RECENT_MVS')
+    log.info(recentMVs)
+    //只取近7天的数据
+    this.recentMVs = recentMVs.filter(item=>dayJsDiff(item.saveTime as number)<=7)
   }
   goToPlay = (song:SongModel)=>{
     AppStorage.setOrCreate('currentPlayList',this.tempPlayList)
@@ -97,6 +106,7 @@ export struct My {
   onPageShow(): void {
     this.getMyPlayLists()
     this.getRecentSongs()
+    this.getRecentMVs()
   }
   onPageHide(): void {
     this.oriMyPlayLists = []
@@ -233,7 +243,7 @@ export struct My {
                 .maxLines(1)
                 .textOverflow({overflow:TextOverflow.Ellipsis})
                 .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-                .fontColor($r('app.color.text_light'))
+                .fontColor($r('app.color.text_default'))
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
                 .borderRadius(10)
@@ -248,7 +258,6 @@ export struct My {
                 .fontColor($r('app.color.text_light'))
             }
             .width('35%')
-            .justifyContent(FlexAlign.SpaceBetween)
           }
         },(item:SongModel)=>item.id.toString())
       }
@@ -256,6 +265,7 @@ export struct My {
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
       .fadingEdge(true)
+      .width(BasicConstants.FULL_WIDTH)
     }
   }
   //所有最近播放列表弹窗
@@ -344,6 +354,145 @@ export struct My {
       right:10
     })
   }
+  @Builder recentMVsBuilder(){
+    Column({space:10}){
+      Row(){
+        Row({space:5}){
+          Text('最近观看')
+            .fontSize(BasicConstants.FONT_SIZE_LARGE)
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_default'))
+          Text(`(${this.recentMVs.length})`)
+            .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+            .fontColor($r('app.color.text_light'))
+        }
+        .alignItems(VerticalAlign.Center)
+        Row(){
+          Text('查看全部')
+            .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+            .fontColor($r('app.color.edit'))
+          Image($r('app.media.icon_arrow_right'))
+            .fillColor($r('app.color.edit'))
+            .width(20)
+            .height(20)
+        }
+        .onClick(()=>{
+          this.showAllRecentMVs = true
+        })
+        .bindSheet($$this.showAllRecentMVs, this.allRecentMVsBuilder(), {
+          title:{title:'最近观看'},
+          height:'80%',
+          showClose:true,
+          radius:{topStart:LengthMetrics.vp(10),topEnd:LengthMetrics.vp(10)}
+        })
+      }
+      .padding({right:10})
+      .width(BasicConstants.FULL_WIDTH)
+      .justifyContent(FlexAlign.SpaceBetween)
+      .alignItems(VerticalAlign.Center)
+      List({space:10}){
+        ForEach(this.recentMVs,(item:MVModel,index:number)=>{
+          ListItem(){
+            Column({space:5}){
+              Text(item.name)
+                .width(BasicConstants.FULL_WIDTH)
+                .maxLines(1)
+                .textOverflow({overflow:TextOverflow.Ellipsis})
+                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                .fontColor($r('app.color.text_default'))
+              Image(item.picUrl)
+                .width(BasicConstants.FULL_WIDTH)
+                .borderRadius(10)
+                .onClick(()=>{
+                  const param:mvRouterParamsModel = {
+                    index: index,
+                    mvList: this.recentMVs
+                  }
+                  router.pushUrl({
+                    url:'pages/PlayMV',
+                    params: {
+                      param: param
+                    }
+                  })
+                })
+              Text(item.artistName.toString())
+                .width(BasicConstants.FULL_WIDTH)
+                .maxLines(1)
+                .textOverflow({overflow:TextOverflow.Ellipsis})
+                .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                .fontColor($r('app.color.text_light'))
+            }
+            .width('50%')
+            .alignItems(HorizontalAlign.Start)
+          }
+        },(item:MVModel)=>item.id.toString())
+      }
+      .listDirection(Axis.Horizontal)
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
+      .fadingEdge(true)
+      .width(BasicConstants.FULL_WIDTH)
+    }
+  }
+  @Builder allRecentMVsBuilder(){
+    Column(){
+      List({space:20}){
+        ForEach(this.recentMVs,(item:MVModel,index:number)=>{
+          ListItem(){
+            RelativeContainer(){
+              Image(item.picUrl)
+                .width(BasicConstants.FULL_WIDTH)
+                .height(BasicConstants.FULL_HEIGHT)
+              Text(item.name)
+                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                .fontColor($r('app.color.label_text'))
+                .maxLines(1)
+                .textOverflow({overflow:TextOverflow.Ellipsis})
+                .backgroundColor($r('app.color.label_background'))
+                .padding(5)
+                .alignRules({
+                  'bottom': { 'anchor': '__container__', 'align': VerticalAlign.Bottom },
+                  'left': { 'anchor': '__container__', 'align': HorizontalAlign.Start }
+                })
+              Text(item.artistName)
+                .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                .fontColor($r('app.color.label_text'))
+                .backgroundColor($r('app.color.label_background'))
+                .padding(5)
+                .borderRadius(5)
+                .margin({top:5,right:5 })
+                .alignRules({
+                  'top': { 'anchor': '__container__', 'align': VerticalAlign.Top },
+                  'right': { 'anchor': '__container__', 'align': HorizontalAlign.End }
+                })
+            }
+            .width(BasicConstants.FULL_WIDTH)
+            .height(200)
+            .borderRadius(10)
+            .clip(true)
+            .onClick(()=>{
+              const param:mvRouterParamsModel = {
+                index: index,
+                mvList: this.recentMVs
+              }
+              router.pushUrl({
+                url:'pages/PlayMV',
+                params: {
+                  param: param
+                }
+              })
+            })
+          }
+        },(item:MVModel)=>item.id.toString())
+      }
+    }
+    .width(BasicConstants.FULL_WIDTH)
+    .padding({
+      left:10,
+      right:10
+    })
+    .margin({bottom:20})
+  }
 
   build() {
     Stack({alignContent:Alignment.Top}){
@@ -353,9 +502,10 @@ export struct My {
           this.myPlayListBuilder()
           //最近播放
           this.recentSongsBuilder()
+          //最近观看
+          this.recentMVsBuilder()
         }
         .width(BasicConstants.FULL_WIDTH)
-        .height(BasicConstants.FULL_HEIGHT)
       }
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.None)

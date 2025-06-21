@@ -108,7 +108,7 @@ export struct MvContent {
       }
       .width(BasicConstants.FULL_WIDTH)
       .alignItems(VerticalAlign.Center)
-      Text(this.mv.publishTime)
+      Text(dayJsFormatData(this.mv.publishTime))
         .infoText(BasicConstants.FONT_SIZE_SMALL,'#a9a9a9')
         .width(BasicConstants.FULL_WIDTH)
     }

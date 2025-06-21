@@ -172,7 +172,7 @@ export class MVModel{
   artistAvatar:string = ''
   shareCount:number = 0
   commentCount:number = 0
-  publishTime:string = ''
+  publishTime:number = 0
   likedCount:number = 0
   url:string = ''
   picUrl:string = ''  //推荐页面用
@@ -185,6 +185,7 @@ export class MVModel{
   comments?:Array<commentsModel> = []
   commentsLazyData?:MyLazyDataSource<commentsModel> = new MyLazyDataSource()  //评论懒加载数据
   showComments?:boolean = false
+  saveTime?:number = 0
 }
 //mv拿用户数据用
 export interface responseArtistModel{

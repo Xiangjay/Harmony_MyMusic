@@ -8,6 +8,8 @@ import { myDataMerge } from '../common/utils/CommonTools'
 import { Loading } from '../components/common/Loading'
 import { getSingerDetailById } from '../common/apis/MusicApis'
 import {MvContent} from '../components/MV/MvContent'
+import { recentMVsDB } from '../db/recentMVsDB'
+import { relationalStore } from '@kit.ArkData'
 
 //视频播放页面
 @Entry
@@ -35,20 +37,50 @@ struct PlayMV {
     mv = myDataMerge<MVModel>(mv,mvUrl.data)
     const avatar = await getSingerDetailById<responseArtistModel,null>(mv.artistId) //拿到MV歌手头像
     mv.artistAvatar = avatar.data.artist.picUrl
-    mv.controller = new VideoController() //初始化MvController，也是因为可选属性，上面new的时候没有初始化
+    mv.controller = new VideoController() //初始化MvController
     this.mvList.push(mv)
     if(this.mvList.length === this.routerParams.mvList.length){ //所有mv数据都拿完了
-      this.currentMv = this.mvList[this.currentPlayIndex]
-      this.currentMv.isPlaying = true
+      this.playMV()
       this.isLoading = false
     }
   }
-
   getMvList = async (list:Array<MVModel>)=>{
     for (let i = 0; i < list.length; i++) {
       //对每一个MV发送请求获取数据
       await this.getMVDetail(list[i].id);
     }
+  }
+  playMV = async ()=>{
+    this.currentMv = this.mvList[this.currentPlayIndex]
+    const valueBucket: relationalStore.ValuesBucket = {
+      ID:this.currentMv.id,
+      NAME: this.currentMv.name,
+      PICURL: this.currentMv.picUrl || this.currentMv.cover,
+      ARTISTNAME:JSON.stringify(this.currentMv.artistName),
+      ARTISTID:JSON.stringify(this.currentMv.artistId),
+      URL:this.currentMv.url,
+      SAVETIME:new Date().getTime()
+    }
+    const recentMVs = await recentMVsDB.queryData('RECENT_MVS',undefined,this.currentMv.id)
+    if (recentMVs.length != 0) {
+      const existed = recentMVs.some(item=>item.id === this.currentMv.id)
+      if(!existed){
+        recentMVsDB.insertData('RECENT_MVS',valueBucket)
+      }else {
+        const valueBucket: relationalStore.ValuesBucket = {
+          SAVETIME:new Date().getTime()
+        }
+        recentMVsDB.updateDataById('RECENT_MVS',this.currentMv.id,valueBucket)
+      }
+    }else {
+      recentMVsDB.insertData('RECENT_MVS',valueBucket)
+    }
+    this.mvList.forEach((mv:MVModel)=>{
+      mv.showPlayButton = false
+      mv.isPlaying = false
+      mv.showComments = false
+    })
+    this.currentMv.isPlaying = true
   }
 
   aboutToAppear(): void {
@@ -77,13 +109,7 @@ struct PlayMV {
     .disableSwipe(this.currentMv.showComments)  //评论列表打开时禁止滑动切换
     .onChange((index: number) => {
       this.currentPlayIndex = index;
-      this.currentMv = this.mvList[index]
-      this.mvList.forEach((mv:MVModel)=>{
-        mv.showPlayButton = false
-        mv.isPlaying = false
-        mv.showComments = false
-      })
-      this.currentMv.isPlaying = true
+      this.playMV()
     })
   }
 
