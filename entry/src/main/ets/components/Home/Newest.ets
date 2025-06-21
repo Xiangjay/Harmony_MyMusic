@@ -7,6 +7,7 @@ import {banner,PlayListModel,MVModel,musicRouterParamsModel,
 import { myDataMerge } from '../../common/utils/CommonTools'
 import { Loading } from '../common/Loading'
 import { router } from '@kit.ArkUI'
+import { MvSwiper } from '../common/MvSwiper'
 
 @Component
 export struct Newest {
@@ -149,56 +150,7 @@ export struct Newest {
   @Builder newestMVBuilder(){
     Column({space:10}){
       Title({title:'最新MV'})
-      Swiper(){
-        ForEach(this.newestMVList,(item:MVModel,index:number)=>{
-          RelativeContainer(){
-            Image(item.cover)
-              .width(BasicConstants.FULL_WIDTH)
-              .height(BasicConstants.FULL_HEIGHT)
-              .objectFit(ImageFit.Cover)
-            Text(item.name)
-              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-              .fontColor($r('app.color.label_text'))
-              .width(BasicConstants.FULL_WIDTH)
-              .maxLines(1)
-              .textOverflow({overflow:TextOverflow.Ellipsis})
-              .backgroundColor($r('app.color.label_background'))
-              .padding(5)
-              .alignRules({
-                'bottom': { 'anchor': '__container__', 'align': VerticalAlign.Bottom },
-                'left': { 'anchor': '__container__', 'align': HorizontalAlign.Start }
-              })
-            Text(item.artistName)
-              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-              .fontColor($r('app.color.label_text'))
-              .backgroundColor($r('app.color.label_background'))
-              .padding(5)
-              .borderRadius(5)
-              .margin({top:5,right:5 })
-              .alignRules({
-                'top': { 'anchor': '__container__', 'align': VerticalAlign.Top },
-                'right': { 'anchor': '__container__', 'align': HorizontalAlign.End }
-              })
-          }
-          .clip(true)
-          .borderRadius(10)
-          .height(200)
-          .onClick(()=>{
-            const param:mvRouterParamsModel = {
-              index: index,
-              mvList: this.newestMVList
-            }
-            router.pushUrl({
-              url:'pages/PlayMV',
-              params: {
-                param: param
-              }
-            })
-          })
-        },(item:MVModel)=>item.id.toString())
-      }
-      .autoPlay(true)
-      .indicator(false)
+      MvSwiper({mvList:this.newestMVList})
     }
     .padding({right:10})
     .margin({bottom:20})

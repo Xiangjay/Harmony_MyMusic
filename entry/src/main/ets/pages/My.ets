@@ -7,8 +7,9 @@ import { TopNavBar } from "../components/common/TopNavBar"
 import { PlayListItem } from "../components/common/PlayListItem"
 import { recentSongsDB } from "../db/recentSongsDB"
 import { getSongUrlByIds } from "../common/apis/MusicApis"
-import { countTransform, dayJsDiff} from '../common/utils/CommonTools'
+import { dayJsDiff} from '../common/utils/CommonTools'
 import { recentMVsDB } from "../db/recentMVsDB"
+import { MvSwiper } from "../components/common/MvSwiper"
 
 
 //我的页面
@@ -386,53 +387,12 @@ export struct My {
           radius:{topStart:LengthMetrics.vp(10),topEnd:LengthMetrics.vp(10)}
         })
       }
-      .padding({right:10})
       .width(BasicConstants.FULL_WIDTH)
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
-      List({space:10}){
-        ForEach(this.recentMVs,(item:MVModel,index:number)=>{
-          ListItem(){
-            Column({space:5}){
-              Text(item.name)
-                .width(BasicConstants.FULL_WIDTH)
-                .maxLines(1)
-                .textOverflow({overflow:TextOverflow.Ellipsis})
-                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-                .fontColor($r('app.color.text_default'))
-              Image(item.picUrl)
-                .width(BasicConstants.FULL_WIDTH)
-                .borderRadius(10)
-                .onClick(()=>{
-                  const param:mvRouterParamsModel = {
-                    index: index,
-                    mvList: this.recentMVs
-                  }
-                  router.pushUrl({
-                    url:'pages/PlayMV',
-                    params: {
-                      param: param
-                    }
-                  })
-                })
-              Text(item.artistName.toString())
-                .width(BasicConstants.FULL_WIDTH)
-                .maxLines(1)
-                .textOverflow({overflow:TextOverflow.Ellipsis})
-                .fontSize(BasicConstants.FONT_SIZE_SMALL)
-                .fontColor($r('app.color.text_light'))
-            }
-            .width('50%')
-            .alignItems(HorizontalAlign.Start)
-          }
-        },(item:MVModel)=>item.id.toString())
-      }
-      .listDirection(Axis.Horizontal)
-      .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.Spring)
-      .fadingEdge(true)
-      .width(BasicConstants.FULL_WIDTH)
+      MvSwiper({mvList:this.recentMVs})
     }
+    .padding({right:10})
   }
   @Builder allRecentMVsBuilder(){
     Column(){
@@ -443,6 +403,7 @@ export struct My {
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
                 .height(BasicConstants.FULL_HEIGHT)
+                .objectFit(ImageFit.Cover)
               Text(item.name)
                 .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                 .fontColor($r('app.color.label_text'))

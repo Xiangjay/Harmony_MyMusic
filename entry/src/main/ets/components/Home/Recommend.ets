@@ -13,6 +13,7 @@ import {PlayListModel,SongModel,recommendDjProgram,musicRouterParamsModel,
 import { Loading } from '../common/Loading'
 import log from '@open/log'
 import { getSongUrlByIds } from '../../common/apis/MusicApis'
+import { MvSwiper } from '../common/MvSwiper'
 
 @Component
 export struct Recommend {
@@ -168,39 +169,7 @@ export struct Recommend {
   @Builder recommendMVBuilder(){
     Column({space:10}){
       Title({title:'精选MV'})
-      Swiper(){
-        ForEach(this.recommendMVList,(item:MVModel,index:number)=>{
-          Stack({alignContent:Alignment.Bottom}){
-            Image(item.picUrl)
-              .width(BasicConstants.FULL_WIDTH)
-              .height(160)
-            Text(item.copywriter)
-              .width(BasicConstants.FULL_WIDTH)
-              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-              .fontColor($r('app.color.label_text'))
-              .backgroundColor($r('app.color.label_background'))
-              .padding(5)
-              .maxLines(2)
-              .textOverflow({ overflow: TextOverflow.Ellipsis})
-          }
-          .borderRadius(10)
-          .clip(true)
-          .onClick(()=>{
-            const param:mvRouterParamsModel = {
-              index: index,
-              mvList: this.recommendMVList
-            }
-            router.pushUrl({
-              url:'pages/PlayMV',
-              params: {
-                param: param
-              }
-            })
-          })
-        },(item:MVModel)=>item.id.toString())
-      }
-      .autoPlay(true)
-      .indicator(false)
+      MvSwiper({mvList:this.recommendMVList})
     }
     .padding({right:10})
   }
