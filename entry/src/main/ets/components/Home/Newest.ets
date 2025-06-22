@@ -92,6 +92,7 @@ export struct Newest {
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
                 .height(BasicConstants.FULL_HEIGHT)
+                .alt($r('app.media.img_loading'))
                 .onClick(()=>{
                   const param:musicRouterParamsModel = {
                     id:item.id,

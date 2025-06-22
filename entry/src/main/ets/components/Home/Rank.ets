@@ -3,10 +3,12 @@ import { BasicConstants } from "../../common/constants/BasicConstants"
 import { countTransform, myDataMerge, SpecificKey } from "../../common/utils/CommonTools"
 import {Title} from '../common/Title'
 import {topArtistsModel,responseTopArtistsList,areaTopArtists, PlayListModel, musicRouterParamsModel,
-  PlayListType} from '../../models/DataModels'
+  PlayListType } from '../../models/DataModels'
 import { Loading } from "../common/Loading"
 import { RankListItem } from "./RankListItem"
-import { router } from "@kit.ArkUI"
+import { LengthMetrics, router } from "@kit.ArkUI"
+import log from "@open/log"
+import { MyLazyDataSource } from "../../common/utils/MyLazyDataSource"
 
 @Component
 export struct Rank {
@@ -20,6 +22,10 @@ export struct Rank {
   @State @Watch('watchLoading')topArtistsLoading:boolean = true
   @State isLoading:boolean = true
   @State areaRankItemHeight: number = -1
+  @State showAllArtists:boolean = false
+  @State shownAreaArtist:MyLazyDataSource<topArtistsModel> = new MyLazyDataSource()
+  @State shownArea:string = ''
+  @State loadingImg:ResourceStr = $r('app.media.img_loading')
 
   //获取所有榜单
   getAllRanks = async () => {
@@ -43,11 +49,11 @@ export struct Rank {
   getTopArtistsList = async () =>{
     const chinaTopArtists = await getTopArtistList<responseTopArtistsList,null>()
     //默认展示前五名数据
-    chinaTopArtists.list.artists.slice(0,5).forEach(item=>{
+    chinaTopArtists.list.artists.slice(0,50).forEach(item=>{
       this.chinaTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     const europeTopArtists = await getTopArtistList<responseTopArtistsList,null>(2)
-    europeTopArtists.list.artists.slice(0,5).forEach(item=>{
+    europeTopArtists.list.artists.slice(0,50).forEach(item=>{
       this.europeTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     this.topArtistsArea.push({area:'华语榜',artists:this.chinaTopArtists})
@@ -59,7 +65,7 @@ export struct Rank {
     japanTopArtists.sort((a,b)=>{
       return b.score - a.score
     })
-    japanTopArtists.slice(0,5).forEach(item=>{
+    japanTopArtists.slice(0,50).forEach(item=>{
       this.japanTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     this.topArtistsArea.push({area:'日韩榜',artists:this.japanTopArtists})
@@ -71,7 +77,6 @@ export struct Rank {
     }
   }
   aboutToAppear(): void {
-
     this.getAllRanks()
     this.getTopArtistsList()
   }
@@ -94,6 +99,7 @@ export struct Rank {
           .justifyContent(FlexAlign.SpaceBetween)
           Row({space:10}){
             Image(rank.picUrl)
+              .alt($r('app.media.img_loading'))
               .width(100)
               .borderRadius(10)
             RankListItem({rank:rank,rankLoading:this.rankLoading})
@@ -113,6 +119,7 @@ export struct Rank {
             })
           })
         }
+        .borderRadius(10)
         .padding(10)
         .backgroundColor($r('app.color.main_tab_background'))
       },(rank:PlayListModel)=>rank.id.toString())
@@ -136,48 +143,47 @@ export struct Rank {
                 .textAlign(TextAlign.Start)
                 .fontColor($r('app.color.text_default'))
               List({space:10}){
-                ForEach(item.artists,(artist:topArtistsModel)=>{
+                ForEach(item.artists.slice(0,5),(artist:topArtistsModel,index:number)=>{
                   ListItem(){
-                    Flex(){
-                      //歌手图片
+                    Row({space:10}){
+                      Text(`${index + 1}`)
+                        .fontColor($r('app.color.text_default'))
+                        .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                        .width(10)
                       Image(artist.picUrl)
-                        // .width(80)
-                        .height(80)
-                        .margin({
-                          right:20
-                        })
+                        .width(80)
+                        .height(BasicConstants.FULL_HEIGHT)
+                        .borderRadius(5)
+                        .alt($r('app.media.img_loading'))
                       //歌手介绍
-                      Column({space:5}){
+                      Column(){
                         Text(artist.name)
                           .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                           .textAlign(TextAlign.Start)
-                          .width(BasicConstants.FULL_WIDTH)
                           .fontColor($r('app.color.text_default'))
+                          .width(BasicConstants.FULL_WIDTH)
                         Text(`共${artist.albumSize}张专辑，${artist.musicSize}首歌曲`)
                           .fontSize(BasicConstants.FONT_SIZE_SMALL)
                           .textAlign(TextAlign.Start)
-                          .width(BasicConstants.FULL_WIDTH)
                           .fontColor($r('app.color.text_default'))
+                          .width(BasicConstants.FULL_WIDTH)
                         Text(){
                           Span(`${countTransform(artist.score)}`)
                             .fontColor($r('app.color.icon_svg_selected'))
                           Span('票')
                             .fontColor($r('app.color.text_default'))
                         }
+                        .width(BasicConstants.FULL_WIDTH)
                         .fontSize(BasicConstants.FONT_SIZE_SMALL)
                         .textAlign(TextAlign.End)
-                        .width(BasicConstants.FULL_WIDTH)
-                        .margin({
-                          right:60
-                        })
                       }
+                      .layoutWeight(1)
                       .height(BasicConstants.FULL_HEIGHT)
-                      .width(BasicConstants.FULL_WIDTH)
                       .justifyContent(FlexAlign.SpaceBetween)
-                      .flexGrow(1)
                     }
                     .height(80)
                     .width(BasicConstants.FULL_WIDTH)
+                    .justifyContent(FlexAlign.SpaceBetween)
                   }
                 },(artist:topArtistsModel)=>artist.id.toString())
               }
@@ -192,9 +198,13 @@ export struct Rank {
                   .fillColor($r('app.color.icon_svg_selected'))
               }
               .margin({top:10})
-              .justifyContent(FlexAlign.Center)
               .alignItems(VerticalAlign.Center)
-              .width(BasicConstants.FULL_WIDTH)
+              .onClick(()=>{
+                this.shownAreaArtist = new MyLazyDataSource()
+                this.shownAreaArtist.pushAllData(item.artists)
+                this.shownArea = item.area
+                this.showAllArtists = true
+              })
             }
             .padding(10)
             .backgroundColor($r('app.color.main_tab_background'))
@@ -214,6 +224,69 @@ export struct Rank {
       .fadingEdge(true)
       .height(this.areaRankItemHeight)
     }
+    .bindSheet($$this.showAllArtists, this.allArtistsBuilder(), {
+      title:{title:this.shownArea},
+      height:'80%',
+      showClose:true,
+      radius:{topStart:LengthMetrics.vp(10),topEnd:LengthMetrics.vp(10)}
+    })
+  }
+  @Builder allArtistsBuilder(){
+    Column(){
+      List({space:10}){
+        LazyForEach(this.shownAreaArtist,(artist:topArtistsModel,index:number)=>{
+          ListItem(){
+            Row({space:10}){
+              Text(`${index + 1}`)
+                .fontColor($r('app.color.text_default'))
+                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                .width(30)
+              Image(artist.picUrl)
+                .width(80)
+                .height(BasicConstants.FULL_HEIGHT)
+                .borderRadius(5)
+                .alt($r('app.media.img_loading'))
+              //歌手介绍
+              Column(){
+                Text(artist.name)
+                  .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                  .textAlign(TextAlign.Start)
+                  .fontColor($r('app.color.text_default'))
+                  .width(BasicConstants.FULL_WIDTH)
+                Text(`共${artist.albumSize}张专辑，${artist.musicSize}首歌曲`)
+                  .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                  .textAlign(TextAlign.Start)
+                  .fontColor($r('app.color.text_default'))
+                  .width(BasicConstants.FULL_WIDTH)
+                Text(){
+                  Span(`${countTransform(artist.score)}`)
+                    .fontColor($r('app.color.icon_svg_selected'))
+                  Span('票')
+                    .fontColor($r('app.color.text_default'))
+                }
+                .width(BasicConstants.FULL_WIDTH)
+                .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                .textAlign(TextAlign.End)
+              }
+              .layoutWeight(1)
+              .height(BasicConstants.FULL_HEIGHT)
+              .justifyContent(FlexAlign.SpaceBetween)
+            }
+            .height(80)
+            .width(BasicConstants.FULL_WIDTH)
+            .justifyContent(FlexAlign.SpaceBetween)
+          }
+        },(artist:topArtistsModel)=>artist.id.toString())
+      }
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.None)
+      .fadingEdge(true)
+    }
+    .padding({
+      left:20,
+      right:20,
+      bottom:20
+    })
   }
 
   build() {
@@ -232,6 +305,7 @@ export struct Rank {
           .justifyContent(FlexAlign.Center)
         }
       }
+      .margin({bottom:20})
     }
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Fade)

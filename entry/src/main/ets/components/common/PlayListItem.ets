@@ -27,6 +27,7 @@ export struct PlayListItem {
             .width(100)
             .height(120)
             .borderRadius(5)
+            .alt($r('app.media.img_loading'))
           Column(){
             Column({space:5}){
               Text(this.playList.name)

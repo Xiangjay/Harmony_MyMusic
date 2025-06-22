@@ -9,5 +9,4 @@ export class BasicConstants{
   static readonly MAIN_TAB_BAR_HEIGHT:number = 60
   static readonly TOAST_DURATION:number = 1000
   static readonly BASE_URL:string = 'http://localhost:3000'
-  // static readonly BASE_URL:string = 'https://1360852836-6pxpgfvvps.ap-beijing.tencentscf.com/'
 }

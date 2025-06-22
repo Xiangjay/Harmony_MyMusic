@@ -12,6 +12,7 @@ export struct MvSwiper {
           Image(item.picUrl || item.cover)
             .width(BasicConstants.FULL_WIDTH)
             .height(BasicConstants.FULL_HEIGHT)
+            .alt($r('app.media.img_loading'))
             .objectFit(ImageFit.Cover)
           Text(item.name)
             .fontSize(BasicConstants.FONT_SIZE_NORMAL)

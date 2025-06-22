@@ -117,6 +117,7 @@ export struct Recommend {
                   .width(BasicConstants.FULL_WIDTH)
                   .height(150)
                   .borderRadius(10)
+                  .alt($r('app.media.img_loading'))
                   .onClick(()=>{
                     const param:musicRouterParamsModel = {
                       id:item.id,
@@ -181,6 +182,7 @@ export struct Recommend {
             Row({space:5}){
               Image(item.picUrl)
                 .width('30%')
+                .alt($r('app.media.img_loading'))
                 .onClick(()=>{
                   this.tempPlayList.songs.push(item)
                   AppStorage.setOrCreate('currentPlayList',this.tempPlayList)
@@ -243,6 +245,7 @@ export struct Recommend {
                 .height(150)
                 .borderRadius(10)
                 .margin({top:10})
+                .alt($r('app.media.img_loading'))
                 .onClick(()=>{
                   this.currentIndex = 3
                 })

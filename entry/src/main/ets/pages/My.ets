@@ -248,6 +248,7 @@ export struct My {
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
                 .borderRadius(10)
+                .alt($r('app.media.img_loading'))
                 .onClick(()=>{
                   this.goToPlay(item)
                 })
@@ -404,6 +405,7 @@ export struct My {
                 .width(BasicConstants.FULL_WIDTH)
                 .height(BasicConstants.FULL_HEIGHT)
                 .objectFit(ImageFit.Cover)
+                .alt($r('app.media.img_loading'))
               Text(item.name)
                 .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                 .fontColor($r('app.color.label_text'))
