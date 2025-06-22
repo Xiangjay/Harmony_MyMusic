@@ -1,15 +1,15 @@
 import { LengthMetrics, PromptAction, router } from "@kit.ArkUI";
 import { BasicConstants } from '../common/constants/BasicConstants'
 import {
-  getSongListSongsById,
+  getPlayListSongsById,
   getSongUrlByIds,
-  getSongListDetailById,
+  getPlayListDetailById,
   getAlbumDetailById,
   getAlbumDynamicById
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
 import { countTransform, myDataMerge, SpecificKey,dayJsFormatData} from "../common/utils/CommonTools";
-import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,playListType, commentsRouterParamsModel, Artist,} from '../models/DataModels'
+import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,PlayListType, commentsRouterParamsModel, Artist,} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 import { TopNavBar } from "../components/common/TopNavBar";
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
@@ -34,7 +34,7 @@ struct Music {
   @StorageProp('safeTop') safeTop: number = 0;
   @State routerParams:musicRouterParamsModel = new musicRouterParamsModel()
   @State playList: PlayListModel= new PlayListModel() //程序需要的数据类型
-  @State playListType:playListType = playListType.playList  //歌单或者专辑
+  @State playListType:PlayListType = PlayListType.playList  //歌单或者专辑
   @State isLoading: boolean = true
   @State noList: boolean = false
   @State localPlayLists:Array<PlayListModel> = [] //用于没有点击歌单而是直接点击音乐进入此页面时
@@ -52,7 +52,7 @@ struct Music {
   //通过传过来的歌单ID获取歌单详细
   getPlayListDetail = async (id:number) => {
     //获取歌单详细信息
-    const resPlayList = await getSongListDetailById<PlayListModel, null>(id)
+    const resPlayList = await getPlayListDetailById<PlayListModel, null>(id)
     let specificKeys:SpecificKey[] = [
       {
         specificKey:'picUrl',
@@ -61,7 +61,7 @@ struct Music {
     ]
     this.playList = myDataMerge<PlayListModel>(new PlayListModel(),resPlayList.playlist,specificKeys)
     //获取歌单里所有歌曲，这里只能拿到歌曲的ID、名字、作者、专辑
-    const resSongs = await getSongListSongsById<Array<SongModel>, null>(id)
+    const resSongs = await getPlayListSongsById<Array<SongModel>, null>(id)
     //用于数据转换的时候把source里的指定key的值赋值到target里特定的key
     specificKeys = [
       {
@@ -144,7 +144,7 @@ struct Music {
     //处理歌曲图片和歌手名字
     this.playList.songs.forEach((song:SongModel)=>{
       song.picUrl = song.album.picUrl || this.playList.picUrl
-      if(this.playListType === playListType.album){
+      if(this.playListType === PlayListType.album){
         song.album.id = this.playList.id
         song.album.name = this.playList.name
         song.album.picUrl = this.playList.picUrl
@@ -325,9 +325,9 @@ struct Music {
     try {
       this.routerParams = (router.getParams() as routerParams<musicRouterParamsModel>).param
       this.playListType = this.routerParams.type
-      if(this.playListType === playListType.playList){
+      if(this.playListType === PlayListType.playList){
         this.getPlayListDetail(this.routerParams.id)
-      }else if(this.playListType === playListType.album){
+      }else if(this.playListType === PlayListType.album){
         this.getAlbumDetail(this.routerParams.id)
       }else {
         this.getLocalPlayListDetail(this.routerParams.id)
@@ -352,7 +352,7 @@ struct Music {
         Text(this.playList.description)
           .coverText()
           .opacity(0.8)
-        Text(this.playListType === playListType.album ? dayJsFormatData(this.playList.publishTime) + ' 发行' : this.playList.tags!.toString())
+        Text(this.playListType === PlayListType.album ? dayJsFormatData(this.playList.publishTime) + ' 发行' : this.playList.tags!.toString())
           .coverText(BasicConstants.FONT_SIZE_SMALL)
           .opacity(0.6)
       }
@@ -424,7 +424,7 @@ struct Music {
           }
         }
         .layoutWeight(1)
-        if(this.playListType !== playListType.local){
+        if(this.playListType !== PlayListType.local){
           Image($r("app.media.icon_add_track"))
             .fillColor($r('app.color.icon_svg_selected'))
             .width(25)
@@ -551,7 +551,7 @@ struct Music {
     })
   }
   onSelectPlayList = (id:number)=>{
-    this.playListType = playListType.local
+    this.playListType = PlayListType.local
     this.getLocalPlayListDetail(id)
     this.showLocalPlayLists = false
   }
@@ -572,7 +572,7 @@ struct Music {
               //封面
               this.coverBuilder()
               //按钮
-              if(this.playListType !== playListType.local){
+              if(this.playListType !== PlayListType.local){
                 this.coverButtonsBuilder()
               }
             }

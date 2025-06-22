@@ -3,7 +3,7 @@ import { BasicConstants } from '../common/constants/BasicConstants'
 import { myDataMerge,dayJsFormatData } from '../common/utils/CommonTools'
 import { Loading } from '../components/common/Loading'
 import {
-  commentsRouterParamsModel, PlayListModel, playListType, routerParams, commentsModel,
+  commentsRouterParamsModel, PlayListModel, PlayListType, routerParams, commentsModel,
   commentsUser,
   responseComments} from '../models/DataModels'
 import {getCommentsById} from '../common/apis/MusicApis'
@@ -25,7 +25,7 @@ struct Comments {
   @StorageProp('safeTop') safeTop: number = 0;
   @State routerParams:commentsRouterParamsModel = new commentsRouterParamsModel()
   @State playList: PlayListModel = new PlayListModel()
-  @State playListType: playListType = playListType.playList
+  @State playListType: PlayListType = PlayListType.playList
   @State isLoading:boolean = true
   //弹窗用
   @State commentsListHeight: string = '0%'

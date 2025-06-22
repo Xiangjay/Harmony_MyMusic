@@ -1,13 +1,12 @@
 import { BasicConstants } from '../../common/constants/BasicConstants'
-import {getRecommendSongList,getRecommendMVList, getRecommendNewSongs,
+import {getRecommendPlayList,getRecommendMVList, getRecommendNewSongs,
   getRecommendDjPrograms} from '../../common/apis/HomeApis'
 import { countTransform,myDataMerge } from '../../common/utils/CommonTools'
 import {Title} from '../common/Title'
 import { router } from '@kit.ArkUI'
 import {PlayListModel,SongModel,recommendDjProgram,musicRouterParamsModel,
-  playListType,
+  PlayListType,
   MVModel,
-  mvRouterParamsModel,
   RecommendSongModel,
   Artist} from '../../models/DataModels'
 import { Loading } from '../common/Loading'
@@ -29,7 +28,7 @@ export struct Recommend {
 
   //获取推荐歌单
   getRecommendSongList = async () =>{
-    const res = await getRecommendSongList<Array<PlayListModel>,null>()
+    const res = await getRecommendPlayList<Array<PlayListModel>,null>()
     res.result.forEach(item=>{
       this.recommendSongList.push(myDataMerge<PlayListModel>(new PlayListModel(),item))
     })
@@ -121,7 +120,7 @@ export struct Recommend {
                   .onClick(()=>{
                     const param:musicRouterParamsModel = {
                       id:item.id,
-                      type:playListType.playList
+                      type:PlayListType.playList
                     }
                     router.pushUrl({
                       url:'pages/Music',

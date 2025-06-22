@@ -8,16 +8,11 @@ import { Newest } from './Home/Newest'
 import { Rank } from './Home/Rank'
 
 @Component
-export struct Main {
+export struct Home {
   @State showSideBar:boolean = false  //控制是否显示侧边栏
   @State defaultKeywords:string = ''  //搜索框默认搜索关键字
-  @State @Watch('changeTabIndex')currentIndex: number = 0;
-  private tabController:TabsController = new TabsController()
+  @State currentIndex: number = 0;
 
-  //跳转tab
-  changeTabIndex(){
-    this.tabController.changeIndex(this.currentIndex)
-  }
 
   //获取搜索框默认搜索关键字
   getDefaultKeywords = async () => {
@@ -27,7 +22,6 @@ export struct Main {
 
   aboutToAppear(): void {
     this.getDefaultKeywords()
-    // this.tabController.preloadItems([1,2])  //预加载子节点，但是没感觉有用
   }
   //顶部搜索栏
   @Builder topBar(){
@@ -117,12 +111,10 @@ export struct Main {
     SideBarContainer(SideBarContainerType.Overlay){
       //侧边栏
       SideBar({showSideBar:this.showSideBar})
-
       //正常内容区域
       Column(){
         this.topBar()
-
-        Tabs({controller: this.tabController}) {
+        Tabs() {
           TabContent() {
             Recommend({currentIndex:this.currentIndex})
           }

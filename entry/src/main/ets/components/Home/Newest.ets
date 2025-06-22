@@ -1,9 +1,7 @@
 import { getMusicBanner, getNewestAlbumsList, getNewestMVList } from '../../common/apis/HomeApis'
 import { BasicConstants } from '../../common/constants/BasicConstants'
 import {Title} from '../common/Title'
-import {banner,PlayListModel,MVModel,musicRouterParamsModel,
-  playListType,
-  mvRouterParamsModel} from '../../models/DataModels'
+import {banner,PlayListModel,MVModel,musicRouterParamsModel, PlayListType} from '../../models/DataModels'
 import { myDataMerge } from '../../common/utils/CommonTools'
 import { Loading } from '../common/Loading'
 import { router } from '@kit.ArkUI'
@@ -97,7 +95,7 @@ export struct Newest {
                 .onClick(()=>{
                   const param:musicRouterParamsModel = {
                     id:item.id,
-                    type:playListType.album
+                    type:PlayListType.album
                   }
                   router.pushUrl({
                     url:'pages/Music',

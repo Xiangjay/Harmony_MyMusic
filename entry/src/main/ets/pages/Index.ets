@@ -1,6 +1,6 @@
 import { BreakPointConstants } from '../common/constants/BreakPointConstants'
 import {BasicConstants} from '../common/constants/BasicConstants'
-import { Main } from '../components/Home';
+import { Home } from '../components/Home';
 import { router } from '@kit.ArkUI';
 
 //程序主页
@@ -52,7 +52,7 @@ struct Index {
   build() {
     Tabs({controller: this.tabController, barPosition: this.currentBreakPoint === BreakPointConstants.BREAKPOINT_SM || this.currentBreakPoint === BreakPointConstants.BREAKPOINT_MD ? BarPosition.End : BarPosition.Start }){
       TabContent(){
-        Main()
+        Home()
       }
       .tabBar(this.tabBarBuilder('首页',0,$r("app.media.icon_home")))
       TabContent(){

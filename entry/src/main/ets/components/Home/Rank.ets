@@ -1,9 +1,12 @@
-import { getTopArtistList } from "../../common/apis/HomeApis"
+import { getAllRanks, getTopArtistList } from "../../common/apis/HomeApis"
 import { BasicConstants } from "../../common/constants/BasicConstants"
-import { countTransform, myDataMerge } from "../../common/utils/CommonTools"
+import { countTransform, myDataMerge, SpecificKey } from "../../common/utils/CommonTools"
 import {Title} from '../common/Title'
-import {topArtistsModel,responseTopArtistsList,areaTopArtists} from '../../models/DataModels'
+import {topArtistsModel,responseTopArtistsList,areaTopArtists, PlayListModel, musicRouterParamsModel,
+  PlayListType} from '../../models/DataModels'
 import { Loading } from "../common/Loading"
+import { RankListItem } from "./RankListItem"
+import { router } from "@kit.ArkUI"
 
 @Component
 export struct Rank {
@@ -11,9 +14,31 @@ export struct Rank {
   @State europeTopArtists:Array<topArtistsModel> = []
   @State japanTopArtists:Array<topArtistsModel> = []
   @State topArtistsArea: Array<areaTopArtists> = []
+  @State rankNames:string[] = ['飙升榜','新歌榜','热歌榜','原创榜']
+  @State rankList:Array<PlayListModel> = []
+  @State @Watch('watchLoading')rankLoading:boolean = true
+  @State @Watch('watchLoading')topArtistsLoading:boolean = true
   @State isLoading:boolean = true
   @State areaRankItemHeight: number = -1
 
+  //获取所有榜单
+  getAllRanks = async () => {
+    const res = await getAllRanks<Array<PlayListModel>,null>()
+    const specificKeys:SpecificKey[] = [
+      {
+        specificKey:'picUrl',
+        sourceKey:'coverImgUrl'
+      }
+    ]
+    //处理想要的榜单
+    res.list.forEach(item=>{
+      this.rankNames.forEach(name=>{
+        if(item.name === name){
+          this.rankList.push(myDataMerge<PlayListModel>(new PlayListModel(),item,specificKeys))
+        }
+      })
+    })
+  }
   //获取歌手排行榜
   getTopArtistsList = async () =>{
     const chinaTopArtists = await getTopArtistList<responseTopArtistsList,null>()
@@ -38,9 +63,64 @@ export struct Rank {
       this.japanTopArtists.push(myDataMerge<topArtistsModel>(new topArtistsModel(),item))
     })
     this.topArtistsArea.push({area:'日韩榜',artists:this.japanTopArtists})
-    this.isLoading = false
+    this.topArtistsLoading = false
+  }
+  watchLoading(){
+    if (!this.rankLoading || !this.topArtistsLoading) {
+      this.isLoading = false
+    }
+  }
+  aboutToAppear(): void {
+
+    this.getAllRanks()
+    this.getTopArtistsList()
   }
 
+  @Builder ranksBuilder(){
+    Column({space:20}){
+      Title({title:'官方榜'})
+      ForEach(this.rankList,(rank:PlayListModel)=>{
+        Column({space:5}){
+          Row(){
+            Text(rank.name)
+              .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+              .fontColor($r('app.color.text_default'))
+              .fontWeight(FontWeight.Bold)
+            Text(rank.updateFrequency)
+              .fontSize(BasicConstants.FONT_SIZE_SMALL)
+              .fontColor($r('app.color.text_default'))
+          }
+          .width(BasicConstants.FULL_WIDTH)
+          .justifyContent(FlexAlign.SpaceBetween)
+          Row({space:10}){
+            Image(rank.picUrl)
+              .width(100)
+              .borderRadius(10)
+            RankListItem({rank:rank,rankLoading:this.rankLoading})
+          }
+          .height(100)
+          .width(BasicConstants.FULL_WIDTH)
+          .onClick(()=>{
+            const param:musicRouterParamsModel = {
+              id:rank.id,
+              type:PlayListType.playList
+            }
+            router.pushUrl({
+              url:'pages/Music',
+              params: {
+                param: param
+              }
+            })
+          })
+        }
+        .padding(10)
+        .backgroundColor($r('app.color.main_tab_background'))
+      },(rank:PlayListModel)=>rank.id.toString())
+    }
+    .width(BasicConstants.FULL_WIDTH)
+    .padding({right:10})
+    .margin({top:20})
+  }
   @Builder topArtistsListBuilder(){
     Column({space:10}){
       Title({title:'歌手排行榜'})
@@ -134,17 +214,13 @@ export struct Rank {
       .fadingEdge(true)
       .height(this.areaRankItemHeight)
     }
-    .margin({top:20})
-  }
-
-  aboutToAppear(): void {
-    this.getTopArtistsList()
   }
 
   build() {
-    // Scroll(){
+    Scroll(){
       Column({space:30}){
         if(!this.isLoading){
+          this.ranksBuilder()
           this.topArtistsListBuilder()
         }else{
           Column(){
@@ -156,14 +232,11 @@ export struct Rank {
           .justifyContent(FlexAlign.Center)
         }
       }
-      //内容没铺满高度，所以要有下面的属性
-      .justifyContent(FlexAlign.Start)
-      .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
     }
-  //   .scrollBar(BarState.Off)
-  //   .edgeEffect(EdgeEffect.Fade)
-  //   .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
-  //   .height(BasicConstants.FULL_HEIGHT)
-  //   .width(BasicConstants.FULL_WIDTH)
-  // }
+    .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Fade)
+    .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
+    .height(BasicConstants.FULL_HEIGHT)
+    .width(BasicConstants.FULL_WIDTH)
+  }
 }

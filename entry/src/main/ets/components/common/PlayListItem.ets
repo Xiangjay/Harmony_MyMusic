@@ -1,6 +1,6 @@
 import log from '@open/log'
 import { BasicConstants } from '../../common/constants/BasicConstants'
-import { musicRouterParamsModel, PlayListModel, playListType } from '../../models/DataModels'
+import { musicRouterParamsModel, PlayListModel, PlayListType } from '../../models/DataModels'
 import { router} from '@kit.ArkUI'
 
 @Extend(Text) function coverText(fontSize:number = BasicConstants.FONT_SIZE_NORMAL) {
@@ -53,7 +53,7 @@ export struct PlayListItem {
           if(this.page === 'My'){
             const param:musicRouterParamsModel = {
               id:this.playList.id,
-              type:playListType.local,
+              type:PlayListType.local,
             }
             router.pushUrl({
               url:'pages/Music',

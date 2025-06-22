@@ -4,29 +4,42 @@ import {myHttp} from '../http/Http'
 export function getDefaultKeywords<T,K>(){
   return myHttp<T,K>('/search/default')
 }
-//获取推荐tab里的推荐歌单
-export function getRecommendSongList<T,K>(){
+/*
+ * 推荐tab
+*/
+//获取推荐歌单
+export function getRecommendPlayList<T,K>(){
   return myHttp<T,K>('/personalized')
 }
-//获取推荐tab里的推荐MV
+//获取推荐MV
 export function getRecommendMVList<T,K>(){
   return myHttp<T,K>('/personalized/mv')
 }
-//获取推荐tab里的新歌推荐
+//获取新歌推荐
 export function getRecommendNewSongs<T,K>(){
   return myHttp<T,K>('/personalized/newsong?limit=10')
 }
-//获取推荐tab里的推荐电台
+//获取推荐电台
 export function getRecommendDjPrograms<T,K>(){
   return myHttp<T,K>('/personalized/djprogram')
 }
-//获取最新tab里最新MV列表
+/*
+ * 最新tab
+*/
+//获取最新MV
 export function getNewestMVList<T,K>(){
   return myHttp<T,K>('/mv/first?limit=5')
 }
-//获取最新tab里最新专辑列表
+//获取最新专辑
 export function getNewestAlbumsList<T,K>(){
   return myHttp<T,K>('/album/newest')
+}
+/*
+ * 排行tab
+*/
+//获取所有排行榜
+export function getAllRanks<T,K>(){
+  return myHttp<T,K>(`/toplist`)
 }
 
 //获取排行榜tab里的歌手排行榜

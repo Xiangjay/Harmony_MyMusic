@@ -9,11 +9,11 @@ export class routerParams<T>{
 }
 export class musicRouterParamsModel{
   id:number = 0
-  type:playListType = playListType.playList
+  type:PlayListType = PlayListType.playList
 }
 export class commentsRouterParamsModel{
   id:number = 0
-  type:playListType = playListType.playList
+  type:PlayListType = PlayListType.playList
   detail:PlayListModel = new PlayListModel()
 }
 export class mvRouterParamsModel{
@@ -21,7 +21,7 @@ export class mvRouterParamsModel{
   mvList:Array<MVModel> = []
 }
 
-export enum playListType{
+export enum PlayListType{
   playList = 'playlist',
   album = 'album',
   local = 'local'
@@ -42,6 +42,7 @@ export class PlayListModel{
   shareCount:number = 0
   artist:Artist = new Artist() //专辑用
   publishTime:number = 0 //专辑用
+  updateFrequency:string = '' //排行榜用
   saveTime?:number = 0 //个人中心用
 }
 
@@ -191,8 +192,20 @@ export class MVModel{
 export interface responseArtistModel{
   artist:Artist
 }
+
 //自定义数据库增删改查返回的数据类型
 export interface DataBaseResponseModel{
   code:number //0代表成功，1代表失败，-1代表没有数据库
   message:string
+}
+
+//排行榜数据类型，排行榜也是歌单的一种
+@Observed
+export class RankModel{
+  id:number = 0
+  name:string = ''
+  updateFrequency:string = ''
+  coverImgUrl:string = ''
+  description:string = ''
+  songs:SongModel[] = []
 }
