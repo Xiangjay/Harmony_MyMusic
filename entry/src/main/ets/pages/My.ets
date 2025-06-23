@@ -235,7 +235,7 @@ export struct My {
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
       List({space:10}){
-        ForEach(this.recentSongs,(item:SongModel)=>{
+        ForEach(this.recentSongs.slice(0,10),(item:SongModel)=>{
           ListItem(){
             Column({space:5}){
               Text(item.name)
@@ -246,6 +246,7 @@ export struct My {
                 .fontColor($r('app.color.text_default'))
               Image(item.picUrl)
                 .width(BasicConstants.FULL_WIDTH)
+                .height(150)
                 .borderRadius(10)
                 .alt($r('app.media.img_loading'))
                 .onClick(()=>{
