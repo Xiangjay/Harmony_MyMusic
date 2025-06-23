@@ -1,24 +1,27 @@
-import { getMusicBanner, getNewestAlbumsList, getNewestMVList } from '../../common/apis/HomeApis'
+import { getMusicBanner, getNewestAlbumsList, getNewestMVList, getNewestSongs } from '../../common/apis/HomeApis'
 import { BasicConstants } from '../../common/constants/BasicConstants'
 import {Title} from '../common/Title'
-import {banner,PlayListModel,MVModel,musicRouterParamsModel, PlayListType} from '../../models/DataModels'
+import {PlayListModel,MVModel,musicRouterParamsModel, PlayListType, SongModel, areaSongs} from '../../models/DataModels'
 import { myDataMerge } from '../../common/utils/CommonTools'
 import { Loading } from '../common/Loading'
-import { router } from '@kit.ArkUI'
+import { LengthMetrics, router } from '@kit.ArkUI'
 import { MvSwiper } from '../common/MvSwiper'
+import log from '@open/log'
+import { getSongUrlByIds } from '../../common/apis/MusicApis'
+import { MyLazyDataSource } from '../../common/utils/MyLazyDataSource'
+import { SongListItem } from '../common/SongListItem'
 
 @Component
 export struct Newest {
-  @State banners:Array<banner> = []
   @State newestAlbumsList:Array<PlayListModel> = []
+  @State newestSongs: Array<areaSongs> = []
+  @State tempPlayList:PlayListModel = new PlayListModel()
+  @State showAllSongs:boolean = false
+  @State shownAreaSongs:MyLazyDataSource<SongModel> = new MyLazyDataSource()
+  @State shownArea:string = ''
   @State newestMVList:Array<MVModel> = []
   @State isLoading:boolean = true
 
-  getBanner = async () => {
-    const res = await getMusicBanner<Array<banner>,null>()
-    this.banners = res.banners
-    this.isLoading = false
-  }
   //获取最新专辑
   getNewestAlbumsList = async () =>{
     const res = await getNewestAlbumsList<Array<PlayListModel>,null>()
@@ -26,6 +29,72 @@ export struct Newest {
       this.newestAlbumsList.push(myDataMerge<PlayListModel>(new PlayListModel(),item))
     })
     this.isLoading = false
+  }
+  //获取新歌速递
+  /*
+   * type : 地区
+      全部:0,华语:7,欧美:96,日本:8,韩国:16
+  */
+  getNewestSongs = async () =>{
+    const resChina = await getNewestSongs<Array<SongModel>,null>()
+    const chinaSongs:Array<SongModel> = []
+    resChina.data.slice(0,50).forEach((item:SongModel)=>{
+      chinaSongs.push(myDataMerge(new SongModel(),item))
+    })
+    this.handleSongs(chinaSongs,'华语')
+    const resEurope = await getNewestSongs<Array<SongModel>,null>(96)
+    const europeSongs:Array<SongModel> = []
+    resEurope.data.slice(0,50).forEach((item:SongModel)=>{
+      europeSongs.push(myDataMerge(new SongModel(),item))
+    })
+    this.handleSongs(europeSongs,'欧美')
+    const responseResult = await Promise.all([getNewestSongs<Array<SongModel>,null>(8),getNewestSongs<Array<SongModel>,null>(16)])
+    const resJapan = responseResult[0].data.concat(responseResult[1].data)
+    resJapan.sort((a,b)=>{
+      return b.album.publishTime - a.album.publishTime
+    })
+    const japanSongs:Array<SongModel> = []
+    resJapan.slice(0,50).forEach((item:SongModel)=>{
+      japanSongs.push(myDataMerge(new SongModel(),item))
+    })
+    this.handleSongs(japanSongs,'日韩')
+  }
+  handleSongs = async (song:Array<SongModel>,area:string) => {
+    const songIds:number[] = []
+    song.forEach((song: SongModel) => {
+      //保存所有歌曲ID，用于后续获取歌曲URL
+      songIds.push(song.id)
+      song.picUrl = song.album.picUrl
+      if(song.artists.length > 1){
+        song.artists.forEach(item=>{
+          song.artistName.push(item.name)
+        })
+      }else{
+        song.artistName.push(song.artists[0].name)
+      }
+    })
+    const responseSongUrls = await getSongUrlByIds<Array<SongModel>, null>(songIds)
+    responseSongUrls.data.forEach(item=>{
+      song.forEach((song:SongModel)=>{
+        if(item.id === song.id){
+          song.url = item.url
+        }
+      })
+    })
+    const areaSongs:areaSongs = {
+      area:area,
+      songs:song
+    }
+    this.newestSongs.push(areaSongs)
+  }
+  goToPlay = (song:SongModel)=>{
+    AppStorage.setOrCreate('currentPlayList',this.tempPlayList)
+    router.pushUrl({
+      url:'pages/Play',
+      params:{
+        param:song
+      }
+    })
   }
   //获取最新MV
   getNewestMVList = async () =>{
@@ -37,51 +106,11 @@ export struct Newest {
   }
 
   aboutToAppear(): void {
-    // this.getBanner()
     this.getNewestAlbumsList()
+    this.getNewestSongs()
     this.getNewestMVList()
   }
 
-  @Builder swiperBuilder(){
-    Row(){
-      Swiper(){
-        ForEach(this.banners,(banner:banner)=>{
-          Stack({alignContent:Alignment.BottomEnd}){
-            Image(banner.pic)
-              .width(BasicConstants.FULL_WIDTH)
-              .borderRadius(5)
-            Text(banner.typeTitle)
-              .fontColor($r('app.color.label_text'))
-              .fontSize(BasicConstants.FONT_SIZE_XSMALL)
-              .padding(5)
-              .borderRadius(5)
-              .backgroundColor($r('app.color.label_background'))
-              .margin({
-                bottom:8,
-                right:8
-              })
-          }
-        },(banner:banner)=>banner.bannerId)
-      }
-      .indicator( // 设置圆点导航点样式
-        new DotIndicator()
-          .left(0)
-          .bottom(0)
-          .itemWidth(8)
-          .itemHeight(8)
-          .selectedItemWidth(8)
-          .selectedItemHeight(8)
-          .color(Color.Gray)
-          .selectedColor(Color.White)
-          .maxDisplayCount(6)
-      )
-      .autoPlay(true)
-    }
-    .margin({
-      top:20,
-      right:10
-    })
-  }
   @Builder newestAlbumsBuilder(){
     Column({space:10}){
       Title({title:'最新专辑'})
@@ -146,6 +175,151 @@ export struct Newest {
     }
     .margin({top:20})
   }
+  @Builder newestSongsBuilder(){
+    Column({space:10}){
+      Title({title:'新歌速递'})
+      List({space:10}){
+        ForEach(this.newestSongs,(item:areaSongs)=>{
+          ListItem(){
+            Column({space:10}){
+              //地区
+              Text(item.area)
+                .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                .fontWeight(FontWeight.Bold)
+                .width(BasicConstants.FULL_WIDTH)
+                .textAlign(TextAlign.Start)
+                .fontColor($r('app.color.text_default'))
+              List({space:10}){
+                ForEach(item.songs.slice(0,10),(song:SongModel)=>{
+                  ListItem(){
+                    Row({space:10}){
+                      Image(song.picUrl)
+                        .width(60)
+                        .height(BasicConstants.FULL_HEIGHT)
+                        .borderRadius(5)
+                        .alt($r('app.media.img_loading'))
+                      Column(){
+                        Text(song.name)
+                          .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                          .fontColor($r('app.color.text_default'))
+                          .maxLines(1)
+                          .textOverflow({overflow:TextOverflow.Ellipsis})
+                        Text(song.artistName.toString())
+                          .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                          .fontColor($r('app.color.text_light'))
+                          .maxLines(1)
+                          .textOverflow({overflow:TextOverflow.Ellipsis})
+                      }
+                      .layoutWeight(1)
+                      .height(BasicConstants.FULL_HEIGHT)
+                      .alignItems(HorizontalAlign.Start)
+                      .justifyContent(FlexAlign.SpaceBetween)
+                    }
+                    .onClick(()=>{
+                      this.tempPlayList = new PlayListModel()
+                      this.tempPlayList.songs.push(...item.songs)
+                      this.goToPlay(song)
+                    })
+                    .height(60)
+                    .width(BasicConstants.FULL_WIDTH)
+                    .justifyContent(FlexAlign.SpaceBetween)
+                  }
+                },(song:SongModel)=>song.id.toString())
+              }
+              .scrollBar(BarState.Off)
+              .edgeEffect(EdgeEffect.None)
+              Row(){
+                Text('查看更多')
+                  .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                  .fontColor($r('app.color.icon_svg_selected'))
+                Image($r("app.media.icon_double_arrow_right"))
+                  .width(20)
+                  .fillColor($r('app.color.icon_svg_selected'))
+              }
+              .margin({top:10})
+              .alignItems(VerticalAlign.Center)
+              .onClick(()=>{
+                this.tempPlayList = new PlayListModel()
+                this.tempPlayList.songs.push(...item.songs)
+                this.shownAreaSongs = new MyLazyDataSource()
+                this.shownAreaSongs.pushAllData(item.songs)
+                this.shownArea = item.area
+                this.showAllSongs = true
+              })
+            }
+            .padding(10)
+            .backgroundColor($r('app.color.main_tab_background'))
+            .borderRadius(5)
+            .width('80%')
+          }
+        },(item:areaSongs)=>item.area)
+      }
+      .listDirection(Axis.Horizontal)
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.None)
+      .fadingEdge(true)
+    }
+    .bindSheet($$this.showAllSongs, this.allSongsBuilder(), {
+      title:{title:this.shownArea},
+      height:'80%',
+      showClose:true,
+      radius:{topStart:LengthMetrics.vp(10),topEnd:LengthMetrics.vp(10)}
+    })
+  }
+  @Builder allSongsBuilder(){
+    Column() {
+      // 播放列表
+      List() {
+        LazyForEach(this.shownAreaSongs, (item: SongModel) => {
+          ListItem() {
+            Row({space:20}) {
+              Image($r('app.media.icon_play'))
+                .width(30)
+                .height(30)
+                .fillColor($r('app.color.edit'))
+              Column({ space: 5 }) {
+                Text(item.name)
+                  .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                  .fontColor($r('app.color.text_default'))
+                  .maxLines(1)
+                  .textOverflow({overflow:TextOverflow.Ellipsis})
+                Text(item.artistName.toString())
+                  .fontSize(BasicConstants.FONT_SIZE_SMALL)
+                  .fontColor($r('app.color.text_light'))
+                  .maxLines(1)
+                  .textOverflow({overflow:TextOverflow.Ellipsis})
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+              .justifyContent(FlexAlign.Center)
+            }
+            .onClick(()=>{
+              this.goToPlay(item)
+            })
+            .padding({
+              left:10,
+              right:10
+            })
+            .height(60)
+            .width(BasicConstants.FULL_WIDTH)
+          }
+          .border({
+            width: { bottom: 1 },
+            color:$r('app.color.list_divider')
+          })
+        },(item:SongModel)=>item.id.toString())
+      }
+      .edgeEffect(EdgeEffect.None)
+      .scrollBar(BarState.Off)
+      .fadingEdge(true)
+      .layoutWeight(1)
+    }
+    .width(BasicConstants.FULL_WIDTH)
+    .padding({
+      left:10,
+      right:10
+    })
+  }
   @Builder newestMVBuilder(){
     Column({space:10}){
       Title({title:'最新MV'})
@@ -156,11 +330,13 @@ export struct Newest {
   }
 
   build() {
-    // Scroll(){
+    Scroll(){
       Column({space:30}){
         if(!this.isLoading){
           //最新专辑区域
           this.newestAlbumsBuilder()
+          //新歌速递
+          this.newestSongsBuilder()
           //最新MV区域
           this.newestMVBuilder()
         }else {
@@ -173,16 +349,12 @@ export struct Newest {
           .alignItems(HorizontalAlign.Center)
         }
       }
-      //内容没铺满高度，所以要有下面的属性
-      .height(BasicConstants.FULL_HEIGHT)
-      .width(BasicConstants.FULL_WIDTH)
-      .justifyContent(FlexAlign.Start)
-      .padding({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
+      .margin({bottom:20})
     }
-    // .scrollBar(BarState.Off)
-    // .edgeEffect(EdgeEffect.Fade)
-    // .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
-    // .height(BasicConstants.FULL_HEIGHT)
-    // .width(BasicConstants.FULL_WIDTH)
-  // }
+    .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Fade)
+    .margin({bottom:BasicConstants.MAIN_TAB_BAR_HEIGHT})
+    .height(BasicConstants.FULL_HEIGHT)
+    .width(BasicConstants.FULL_WIDTH)
+  }
 }

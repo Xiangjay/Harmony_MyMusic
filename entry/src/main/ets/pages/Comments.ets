@@ -75,6 +75,7 @@ struct Comments {
         Image(this.playList.picUrl)
           .borderRadius(5)
           .width(BasicConstants.FULL_WIDTH)
+          .alt($r('app.media.img_loading'))
           .height(120)
       }
       .width(120)

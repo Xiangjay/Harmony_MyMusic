@@ -24,7 +24,8 @@ export class mvRouterParamsModel{
 export enum PlayListType{
   playList = 'playlist',
   album = 'album',
-  local = 'local'
+  local = 'local',
+  singer = 'singer'
 }
 
 //程序需要的歌单数据类型
@@ -61,6 +62,20 @@ export class SongModel{
   duration:number = 0   //歌曲总时长
   saveTime?:number = 0 //个人中心用
 }
+export class responseSingerDetail{
+  identify:identify = {imageDesc:''}
+  artist:Artist = new Artist()
+  songs:Array<SongModel> = []
+  fansCnt:number = 0
+}
+interface identify{
+  imageDesc:string
+}
+//排行榜tab里页面需要展示的的歌手排行榜数据类型
+export interface areaSongs{
+  area:string,
+  songs: Array<SongModel>
+}
 //新歌推荐后台返回的数据类型
 export class RecommendSongModel{
   id:number = 0 //歌曲Id
@@ -81,12 +96,17 @@ export class Artist{
   id:number = 0
   name:string = ''
   picUrl:string = ''
+  briefDesc:string = ''
+  albumSize:number = 0
+  musicSize:number = 0
+  fansCnt:number = 0
 }
 //专辑
 export class Album{
   id:number = 0
   name:string = ''
   picUrl:string = ''
+  publishTime:number = 0
 }
 
 

@@ -30,6 +30,10 @@ export function getRecommendDjPrograms<T,K>(){
 export function getNewestMVList<T,K>(){
   return myHttp<T,K>('/mv/first?limit=5')
 }
+//获取新歌速递
+export function getNewestSongs<T,K>(type:number = 7){
+  return myHttp<T,K>(`/top/song?type=${type}`)
+}
 //获取最新专辑
 export function getNewestAlbumsList<T,K>(){
   return myHttp<T,K>('/album/newest')

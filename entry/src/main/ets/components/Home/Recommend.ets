@@ -43,7 +43,7 @@ export struct Recommend {
     this.isLoading = false
   }
   //获取推荐新歌
-  getRecommendNewSons = async () =>{
+  getRecommendNewSongs = async () =>{
     const res = await getRecommendNewSongs<Array<RecommendSongModel>,null>()
     const recommendNewSongs:Array<RecommendSongModel> = []
     const songIds:number[] = []
@@ -101,7 +101,7 @@ export struct Recommend {
   aboutToAppear(): void {
     this.getRecommendSongList()
     this.getRecommendMVList()
-    this.getRecommendNewSons()
+    this.getRecommendNewSongs()
     this.getRecommendDjProgramsList()
   }
 

@@ -7,7 +7,6 @@ import {topArtistsModel,responseTopArtistsList,areaTopArtists, PlayListModel, mu
 import { Loading } from "../common/Loading"
 import { RankListItem } from "./RankListItem"
 import { LengthMetrics, router } from "@kit.ArkUI"
-import log from "@open/log"
 import { MyLazyDataSource } from "../../common/utils/MyLazyDataSource"
 
 @Component
@@ -25,7 +24,6 @@ export struct Rank {
   @State showAllArtists:boolean = false
   @State shownAreaArtist:MyLazyDataSource<topArtistsModel> = new MyLazyDataSource()
   @State shownArea:string = ''
-  @State loadingImg:ResourceStr = $r('app.media.img_loading')
 
   //获取所有榜单
   getAllRanks = async () => {
@@ -46,6 +44,10 @@ export struct Rank {
     })
   }
   //获取歌手排行榜
+  /*
+   * type : 地区
+      1: 华语,2: 欧美,3: 韩国,4: 日本
+  */
   getTopArtistsList = async () =>{
     const chinaTopArtists = await getTopArtistList<responseTopArtistsList,null>()
     //默认展示前五名数据
@@ -146,10 +148,6 @@ export struct Rank {
                 ForEach(item.artists.slice(0,5),(artist:topArtistsModel,index:number)=>{
                   ListItem(){
                     Row({space:10}){
-                      Text(`${index + 1}`)
-                        .fontColor($r('app.color.text_default'))
-                        .fontSize(BasicConstants.FONT_SIZE_NORMAL)
-                        .width(10)
                       Image(artist.picUrl)
                         .width(80)
                         .height(BasicConstants.FULL_HEIGHT)
@@ -184,6 +182,18 @@ export struct Rank {
                     .height(80)
                     .width(BasicConstants.FULL_WIDTH)
                     .justifyContent(FlexAlign.SpaceBetween)
+                    .onClick(()=>{
+                      const param:musicRouterParamsModel = {
+                        id:artist.id,
+                        type:PlayListType.singer
+                      }
+                      router.pushUrl({
+                        url:'pages/Music',
+                        params: {
+                          param: param
+                        }
+                      })
+                    })
                   }
                 },(artist:topArtistsModel)=>artist.id.toString())
               }

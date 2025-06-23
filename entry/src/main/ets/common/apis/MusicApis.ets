@@ -15,10 +15,6 @@ export function getSongUrlByIds<T,K>(songIds:number[]){
 export function getSongDetailByIds<T,K>(songIds:number[]){
   return myHttp<T,K>(`/song/detail?ids=${songIds}`)
 }
-//通过歌手id获取歌手详细信息
-export function getSingerDetailById<T,K>(singerId:number){
-  return myHttp<T,K>(`/artist/detail?id=${singerId}`)
-}
 //通过专辑id获取专辑详细信息
 export function getAlbumDetailById<T,K>(albumId:number){
   return myHttp<T,K>(`/album?id=${albumId}`)
@@ -31,4 +27,16 @@ export function getAlbumDynamicById<T,K>(albumId:number){
 export function getCommentsById<T,K>(type:string,id:number,offsetNum:number,pageSize:number = 10){
   //默认每次取10条数据
   return myHttp<T,K>(`/comment/${type}?id=${id}&offset=${offsetNum}&limit=${pageSize}`)
+}
+//通过歌手id获取歌手详细信息
+export function getSingerDetailById<T,K>(singerId:number){
+  return myHttp<T,K>(`/artist/detail?id=${singerId}`)
+}
+//通过歌手id获取歌手粉丝数量
+export function getSingerFansById<T,K>(singerId:number){
+  return myHttp<T,K>(`/artist/follow/count?id=${singerId}`)
+}
+//通过歌手id获取歌手50首热门歌曲
+export function getSongsBySingerId<T,K>(singerId:number){
+  return myHttp<T,K>(`/artist/songs?id=${singerId}`)
 }

@@ -5,11 +5,15 @@ import {
   getSongUrlByIds,
   getPlayListDetailById,
   getAlbumDetailById,
-  getAlbumDynamicById
+  getAlbumDynamicById,
+  getSingerDetailById,
+  getSingerFansById,
+  getSongsBySingerId
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
 import { countTransform, myDataMerge, SpecificKey,dayJsFormatData} from "../common/utils/CommonTools";
-import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,PlayListType, commentsRouterParamsModel, Artist,} from '../models/DataModels'
+import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,PlayListType, commentsRouterParamsModel, Artist,
+  responseSingerDetail,} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 import { TopNavBar } from "../components/common/TopNavBar";
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
@@ -130,6 +134,41 @@ struct Music {
     this.songListHeight = '70%'
     this.songListOpacity = 1
   }
+  //通过传过来的歌手ID获取歌手详情及热门歌曲
+  getSingerPlayListDetail = async (id:number) => {
+    const res = await getSingerDetailById<responseSingerDetail,null>(id)
+    const singerDetail:responseSingerDetail = myDataMerge(new responseSingerDetail(),res.data)
+    this.playList.id = id
+    this.playList.name = singerDetail.artist.name
+    this.playList.description = singerDetail.artist.briefDesc
+    this.playList.tags = [singerDetail.identify.imageDesc]
+    let specificKeys:SpecificKey[] = [
+      {
+        specificKey:'picUrl',
+        sourceKey:'cover'
+      }
+    ]
+    this.playList.artist = myDataMerge(new Artist(),singerDetail.artist,specificKeys)
+    this.playList.picUrl = this.playList.artist.picUrl
+    const singerFansCount = await getSingerFansById<responseSingerDetail,null>(id)
+    this.playList.artist.fansCnt = singerFansCount.data.fansCnt
+    const singerSongs = await getSongsBySingerId<Array<SongModel>,null>(id)
+    specificKeys = [
+      {
+        specificKey:'artists',
+        sourceKey:'ar'
+      },
+      {
+        specificKey:'album',
+        sourceKey:'al'
+      },
+      {
+        specificKey:'duration',
+        sourceKey:'dt'
+      }
+    ]
+    await this.handleSongs(singerSongs.songs,specificKeys)
+  }
   //处理歌曲列表
   handleSongs = async (resSongs:Array<SongModel>,specificKeys:SpecificKey[])=>{
     //所有歌曲ID
@@ -170,7 +209,7 @@ struct Music {
     //把数据放入懒加载数据类型中
     this.musicLazyData.pushAllData(this.playList.songs)
     this.isLoading = false
-    this.songListHeight = '65%'
+    this.songListHeight = '60%'
     this.songListOpacity = 1
   }
   addPlayList2ToLocal = async ()=>{
@@ -329,8 +368,11 @@ struct Music {
         this.getPlayListDetail(this.routerParams.id)
       }else if(this.playListType === PlayListType.album){
         this.getAlbumDetail(this.routerParams.id)
-      }else {
+      }else if(this.playListType === PlayListType.local){
         this.getLocalPlayListDetail(this.routerParams.id)
+      }else if(this.playListType === PlayListType.singer){
+        this.getSingerPlayListDetail(6452)
+        // this.getSingerPlayListDetail(this.routerParams.id)
       }
     } catch {
       this.getLocalPlayLists()
@@ -344,14 +386,20 @@ struct Music {
           .borderRadius(5)
           .width(BasicConstants.FULL_WIDTH)
           .height(120)
+          .alt($r('app.media.img_loading'))
       }
       .width(120)
       Column() {
         Text(this.playList.name)
           .coverText(BasicConstants.FONT_SIZE_LARGE)
-        Text(this.playList.description)
-          .coverText()
-          .opacity(0.8)
+        if(this.playListType !== PlayListType.singer){
+          Text(this.playList.description)
+            .coverText()
+            .opacity(0.8)
+        }else{
+          Text(`粉丝数：${countTransform(this.playList.artist.fansCnt)}`)
+            .coverText()
+        }
         Text(this.playListType === PlayListType.album ? dayJsFormatData(this.playList.publishTime) + ' 发行' : this.playList.tags!.toString())
           .coverText(BasicConstants.FONT_SIZE_SMALL)
           .opacity(0.6)
@@ -572,8 +620,18 @@ struct Music {
               //封面
               this.coverBuilder()
               //按钮
-              if(this.playListType !== PlayListType.local){
+              if(this.playListType !== PlayListType.local && this.playListType !== PlayListType.singer){
                 this.coverButtonsBuilder()
+              }else if(this.playListType === PlayListType.singer){
+                Column(){
+                  Scroll(){
+                    Text(this.playList.description)
+                      .fontColor(Color.White)
+                      .fontSize(BasicConstants.FONT_SIZE_NORMAL)
+                      .padding({bottom:5})
+                  }
+                }
+                .layoutWeight(1)
               }
             }
             .padding({

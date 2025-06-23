@@ -64,6 +64,7 @@ struct MV {
               Image(mv.cover)
                 .width(BasicConstants.FULL_WIDTH)
                 .height(200)
+                .alt($r('app.media.img_loading'))
               Text(mv.name)
                 .fontSize(BasicConstants.FONT_SIZE_NORMAL)
                 .fontColor($r('app.color.label_text'))

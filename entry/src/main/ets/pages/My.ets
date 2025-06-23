@@ -67,7 +67,6 @@ export struct My {
       }
     })
   }
-
   deletePlayList = (id:number) =>{
     this.getUIContext().showAlertDialog({
         title: '确定删除此歌单吗？',
