@@ -48,6 +48,16 @@
           ],
           "when" : "inuse"
         }
+      },
+      {
+        "name" : "ohos.permission.MICROPHONE",
+        "reason" : "$string:microPhone",
+        "usedScene" : {
+          "abilities" : [
+            "EntryAbility"
+          ],
+          "when" : "inuse"
+        }
       }
     ],
     "abilities": [

@@ -6,18 +6,34 @@ import { Recommend } from './Home/Recommend'
 import { Empty } from './common/Empty'
 import { Newest } from './Home/Newest'
 import { Rank } from './Home/Rank'
+import { common, Permissions } from '@kit.AbilityKit'
+import { reqPermissionsFromUser } from '../common/utils/PermissionsFromUser'
+import { PromptAction } from '@kit.ArkUI'
 
 @Component
 export struct Home {
   @State showSideBar:boolean = false  //控制是否显示侧边栏
   @State defaultKeywords:string = ''  //搜索框默认搜索关键字
   @State currentIndex: number = 0;
-
+  private uiContext: UIContext = this.getUIContext();
+  private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
 
   //获取搜索框默认搜索关键字
   getDefaultKeywords = async () => {
     const res = await getDefaultKeywords<SearchKeyWordInterface,null>()
     this.defaultKeywords = res.data.showKeyword
+  }
+  //获取麦克风权限
+  getMicroPhoneAccess = async () => {
+    const context:common.UIAbilityContext = getContext(this) as common.UIAbilityContext	//拿到当前上下文
+    const permissions:Array<Permissions> = ['ohos.permission.MICROPHONE']
+    const res = await reqPermissionsFromUser(permissions,context)
+    if(res === 1){
+      this.promptAction.showToast({
+        message: '该功能还没做，只为展示授权麦克风弹窗用',
+        duration: 2000,
+      })
+    }
   }
 
   aboutToAppear(): void {
@@ -79,6 +95,7 @@ export struct Home {
         .height(25)
         .fillColor($r('app.color.icon_svg_selected'))
         .onClick(()=>{
+          this.getMicroPhoneAccess()
         })
     }
     .padding(10)

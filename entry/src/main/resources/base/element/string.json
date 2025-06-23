@@ -14,7 +14,11 @@
     },
     {
       "name": "grant_location",
-      "value": "用于测试地理位置"
+      "value": "为了展示地理位置弹窗，无实际用途，仅用于本应用的展示"
+    },
+    {
+      "name": "microPhone",
+      "value": "为了展示麦克风弹窗，无实际用途，仅用于本应用的展示"
     },
     {
       "name": "loading",

@@ -10,6 +10,8 @@ import { getSongUrlByIds } from "../common/apis/MusicApis"
 import { dayJsDiff} from '../common/utils/CommonTools'
 import { recentMVsDB } from "../db/recentMVsDB"
 import { MvSwiper } from "../components/common/MvSwiper"
+import { common, Permissions } from "@kit.AbilityKit"
+import { reqPermissionsFromUser } from "../common/utils/PermissionsFromUser"
 
 
 //我的页面
@@ -29,6 +31,12 @@ export struct My {
   private uiContext: UIContext = this.getUIContext();
   private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
 
+  //获取地理位置权限
+  getLocationAccess = async () => {
+    const context:common.UIAbilityContext = getContext(this) as common.UIAbilityContext	//拿到当前上下文
+    const permissions:Array<Permissions> = ['ohos.permission.LOCATION','ohos.permission.APPROXIMATELY_LOCATION']
+    await reqPermissionsFromUser(permissions,context)
+  }
   getMyPlayLists = async ()=>{
     this.oriMyPlayLists = await playListDB.queryData('PLAYLIST')
     this.myPlayLists = this.oriMyPlayLists.slice(0,3)
@@ -104,6 +112,7 @@ export struct My {
   }
 
   onPageShow(): void {
+    this.getLocationAccess()
     this.getMyPlayLists()
     this.getRecentSongs()
     this.getRecentMVs()
