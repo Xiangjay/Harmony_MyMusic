@@ -9,6 +9,7 @@ import { Rank } from './Home/Rank'
 import { common, Permissions } from '@kit.AbilityKit'
 import { reqPermissionsFromUser } from '../common/utils/PermissionsFromUser'
 import { PromptAction } from '@kit.ArkUI'
+import { Program } from './Home/Program'
 
 @Component
 export struct Home {
@@ -142,18 +143,16 @@ export struct Home {
           }
           .padding({left:10})
           .tabBar(this.tabBarBuilder('最新',1))
-
           TabContent() {
             Rank()
           }
           .padding({left:10})
           .tabBar(this.tabBarBuilder('排行榜',2))
-
           TabContent() {
-            Empty({isPage:false})
+            Program()
           }
           .padding({left:10})
-          .tabBar(this.tabBarBuilder('电台',3))
+          .tabBar(this.tabBarBuilder('节目',3))
 
           TabContent() {
             Empty({isPage:false})

@@ -1,6 +1,5 @@
 import { BasicConstants } from '../../common/constants/BasicConstants'
-import {getRecommendPlayList,getRecommendMVList, getRecommendNewSongs,
-  getRecommendDjPrograms} from '../../common/apis/HomeApis'
+import {getRecommendPlayList,getRecommendMVList, getRecommendNewSongs,getRecommendPrograms} from '../../common/apis/HomeApis'
 import { countTransform,myDataMerge } from '../../common/utils/CommonTools'
 import {Title} from '../common/Title'
 import { router } from '@kit.ArkUI'
@@ -8,7 +7,8 @@ import {PlayListModel,SongModel,recommendDjProgram,musicRouterParamsModel,
   PlayListType,
   MVModel,
   RecommendSongModel,
-  Artist} from '../../models/DataModels'
+  Artist,
+  ProgramModel} from '../../models/DataModels'
 import { Loading } from '../common/Loading'
 import log from '@open/log'
 import { getSongUrlByIds } from '../../common/apis/MusicApis'
@@ -19,6 +19,7 @@ export struct Recommend {
   @State recommendSongList:Array<PlayListModel> = []
   @State recommendMVList:Array<MVModel> = []
   @State recommendNewSongs:Array<SongModel> = []
+  @State recommendPrograms:Array<ProgramModel> = []
   @State recommendDjPrograms:Array<recommendDjProgram> = []
   @State tempPlayList:PlayListModel = new PlayListModel()
   @State songListItemHeight: number = -1
@@ -89,11 +90,11 @@ export struct Recommend {
     })
     this.isLoading = false
   }
-  //获取推荐电台
-  getRecommendDjProgramsList = async () => {
-    const res = await getRecommendDjPrograms<Array<recommendDjProgram>,null>()
-    res.result.forEach(item=>{
-      this.recommendDjPrograms.push(myDataMerge<recommendDjProgram>(new recommendDjProgram(),item))
+  //获取推荐节目
+  getRecommendProgramsList = async () => {
+    const res = await getRecommendPrograms<Array<ProgramModel>,null>()
+    res.programs.forEach(item=>{
+      this.recommendPrograms.push(myDataMerge<ProgramModel>(new ProgramModel(),item))
     })
     this.isLoading = false
   }
@@ -102,7 +103,7 @@ export struct Recommend {
     this.getRecommendSongList()
     this.getRecommendMVList()
     this.getRecommendNewSongs()
-    this.getRecommendDjProgramsList()
+    this.getRecommendProgramsList()
   }
 
   @Builder recommendSongListBuilder(){
@@ -227,11 +228,11 @@ export struct Recommend {
       .width(BasicConstants.FULL_WIDTH)
     }
   }
-  @Builder recommendDjProgramsBuilder(){
+  @Builder recommendProgramsBuilder(){
     Column({space:10}){
-      Title({title:'推荐电台'})
+      Title({title:'推荐节目'})
       List({space:10}){
-        ForEach(this.recommendDjPrograms,(item:recommendDjProgram)=>{
+        ForEach(this.recommendPrograms,(item:ProgramModel)=>{
           ListItem(){
             Column(){
               Text(item.name)
@@ -240,14 +241,23 @@ export struct Recommend {
                 .textOverflow({overflow:TextOverflow.Ellipsis})
                 .fontSize(BasicConstants.FONT_SIZE_SMALL)
                 .fontColor($r('app.color.text_light'))
-              Image(item.picUrl)
+              Image(item.coverUrl)
                 .width(BasicConstants.FULL_WIDTH)
                 .height(150)
                 .borderRadius(10)
                 .margin({top:10})
                 .alt($r('app.media.img_loading'))
                 .onClick(()=>{
-                  this.currentIndex = 3
+                  const param:musicRouterParamsModel = {
+                    id:item.id,
+                    type:PlayListType.dj
+                  }
+                  router.pushUrl({
+                    url:'pages/Music',
+                    params: {
+                      param: param
+                    }
+                  })
                 })
             }
             .width('40%')
@@ -258,7 +268,7 @@ export struct Recommend {
               this.djListItemHeight = newArea.height as number
             }
           })
-        },(item:recommendDjProgram)=>item.id.toString())
+        },(item:ProgramModel)=>item.id.toString())
       }
       .listDirection(Axis.Horizontal)
       .scrollBar(BarState.Off)
@@ -282,8 +292,8 @@ export struct Recommend {
           this.recommendMVBuilder()
           //新歌推荐
           this.recommendNewSongsBuilder()
-          //推荐电台
-          this.recommendDjProgramsBuilder()
+          //推荐节目
+          this.recommendProgramsBuilder()
         }else {
           Loading()
         }

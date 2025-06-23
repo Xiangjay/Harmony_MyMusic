@@ -40,3 +40,7 @@ export function getSingerFansById<T,K>(singerId:number){
 export function getSongsBySingerId<T,K>(singerId:number){
   return myHttp<T,K>(`/artist/songs?id=${singerId}`)
 }
+//通过节目id获取节目详情
+export function getProgramDetailById<T,K>(programId:number){
+  return myHttp<T,K>(`/dj/program/detail?id=${programId}`)
+}

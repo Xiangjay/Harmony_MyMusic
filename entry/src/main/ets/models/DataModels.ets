@@ -25,7 +25,8 @@ export enum PlayListType{
   playList = 'playlist',
   album = 'album',
   local = 'local',
-  singer = 'singer'
+  singer = 'singer',
+  dj = 'dj'
 }
 
 //程序需要的歌单数据类型
@@ -228,4 +229,22 @@ export class RankModel{
   coverImgUrl:string = ''
   description:string = ''
   songs:SongModel[] = []
+}
+
+//节目数据类型
+export class ProgramModel{
+  id:number = 0
+  name:string = ''
+  description:string = ''
+  coverUrl:string = ''
+  duration:number = 0
+  likedCount:number = 0
+  shareCount:number = 0
+  commentCount:number = 0
+  mainSong:SongModel = new SongModel()
+  songs:Array<SongModel> = []
+}
+//节目榜数据类型
+export interface allProgramsModel{
+  program:ProgramModel
 }

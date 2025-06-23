@@ -8,12 +8,14 @@ import {
   getAlbumDynamicById,
   getSingerDetailById,
   getSingerFansById,
-  getSongsBySingerId
+  getSongsBySingerId,
+  getProgramDetailById
 } from '../common/apis/MusicApis'
 import { Empty } from "../components/common/Empty";
 import { countTransform, myDataMerge, SpecificKey,dayJsFormatData} from "../common/utils/CommonTools";
 import {routerParams,PlayListModel,SongModel,musicRouterParamsModel,PlayListType, commentsRouterParamsModel, Artist,
-  responseSingerDetail,} from '../models/DataModels'
+  responseSingerDetail,
+  ProgramModel,} from '../models/DataModels'
 import { Loading } from "../components/common/Loading";
 import { TopNavBar } from "../components/common/TopNavBar";
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
@@ -130,9 +132,6 @@ struct Music {
     })
     //把数据放入懒加载数据类型中
     this.musicLazyData.pushAllData(this.playList.songs)
-    this.isLoading = false
-    this.songListHeight = '70%'
-    this.songListOpacity = 1
   }
   //通过传过来的歌手ID获取歌手详情及热门歌曲
   getSingerPlayListDetail = async (id:number) => {
@@ -169,8 +168,24 @@ struct Music {
     ]
     await this.handleSongs(singerSongs.songs,specificKeys)
   }
+  //通过传过来的节目ID获取节目详情
+  getProgramDetail = async (id:number) => {
+    const res = await getProgramDetailById<ProgramModel,null>(id)
+    const program = res.program
+    let specificKeys:SpecificKey[] = [
+      {
+        specificKey:'picUrl',
+        sourceKey:'coverUrl'
+      }
+    ]
+    this.playList = myDataMerge(new PlayListModel(),program,specificKeys)
+    if(program.songs.length === 0){
+      this.playList.songs = [program.mainSong]
+    }
+    await this.handleSongs(this.playList.songs)
+  }
   //处理歌曲列表
-  handleSongs = async (resSongs:Array<SongModel>,specificKeys:SpecificKey[])=>{
+  handleSongs = async (resSongs:Array<SongModel>,specificKeys?:SpecificKey[])=>{
     //所有歌曲ID
     const songIds:number[] = []
     //处理下拿到的歌曲的数据格式
@@ -209,7 +224,13 @@ struct Music {
     //把数据放入懒加载数据类型中
     this.musicLazyData.pushAllData(this.playList.songs)
     this.isLoading = false
-    this.songListHeight = '60%'
+    if(this.playListType === PlayListType.singer){
+      this.songListHeight = '60%'
+    }else if(this.playListType === PlayListType.local){
+      this.songListHeight = '70%'
+    }else {
+      this.songListHeight = '65%'
+    }
     this.songListOpacity = 1
   }
   addPlayList2ToLocal = async ()=>{
@@ -371,8 +392,9 @@ struct Music {
       }else if(this.playListType === PlayListType.local){
         this.getLocalPlayListDetail(this.routerParams.id)
       }else if(this.playListType === PlayListType.singer){
-        this.getSingerPlayListDetail(6452)
-        // this.getSingerPlayListDetail(this.routerParams.id)
+        this.getSingerPlayListDetail(this.routerParams.id)
+      }else if(this.playListType === PlayListType.dj){
+        this.getProgramDetail(this.routerParams.id)
       }
     } catch {
       this.getLocalPlayLists()
@@ -424,23 +446,28 @@ struct Music {
   @Builder coverButtonsBuilder() {
     Row({space:30}){
       Button(){
-        Row(){
+        Row({space:5}){
           Image($r('app.media.icon_share'))
             .width(20)
+            .fillColor($r('app.color.disabled'))
           Text(this.playList.shareCount != 0 ? countTransform(this.playList.shareCount,false) : '分享')
-            .fontColor('#ffffff')
-            .margin({left:5})
+            .fontColor($r('app.color.disabled'))
         }
         .justifyContent(FlexAlign.Center)
       }
       .coverButtons()
+      .onClick(()=>{
+        this.promptAction.showToast({
+          message:'暂时无法分享',
+          duration:BasicConstants.TOAST_DURATION
+        })
+      })
       Button(){
-        Row(){
+        Row({space:5}){
           Image($r('app.media.icon_comment'))
             .width(20)
           Text(this.playList.commentCount != 0 ? countTransform(this.playList.commentCount,false) : '评论')
             .fontColor('#ffffff')
-            .margin({left:5})
         }
         .justifyContent(FlexAlign.Center)
       }

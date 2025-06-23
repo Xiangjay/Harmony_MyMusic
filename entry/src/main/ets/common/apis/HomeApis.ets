@@ -19,9 +19,9 @@ export function getRecommendMVList<T,K>(){
 export function getRecommendNewSongs<T,K>(){
   return myHttp<T,K>('/personalized/newsong?limit=10')
 }
-//获取推荐电台
-export function getRecommendDjPrograms<T,K>(){
-  return myHttp<T,K>('/personalized/djprogram')
+//获取推荐节目
+export function getRecommendPrograms<T,K>(limit:number = 5){
+  return myHttp<T,K>(`/program/recommend?limit=${limit}`)
 }
 /*
  * 最新tab
@@ -39,7 +39,7 @@ export function getNewestAlbumsList<T,K>(){
   return myHttp<T,K>('/album/newest')
 }
 /*
- * 排行tab
+ * 排行榜tab
 */
 //获取所有排行榜
 export function getAllRanks<T,K>(){
@@ -54,4 +54,10 @@ export function getTopArtistList<T,K>(type:number = 1){
 //获取最新tab里的swiper
 export function getMusicBanner<T,K>(){
   return myHttp<T,K>('/banner?type=1')
+}
+/*
+ * 排行tab
+*/
+export function getAllPrograms<T,K>(){
+  return myHttp<T,K>('/dj/program/toplist?limit=10')
 }
