@@ -2,19 +2,21 @@ import { LengthMetrics, PromptAction, router } from '@kit.ArkUI'
 import { BasicConstants } from '../common/constants/BasicConstants'
 import { numberToTime } from '../common/utils/CommonTools'
 import {avPlayerManager} from '../common/utils/AVPlayerManager'
-import log from '@open/log'
 import { PlayListModel, routerParams, SongModel, PlayMode } from '../models/DataModels'
 import { TopNavBar } from '../components/common/TopNavBar'
 import { MyLazyDataSource } from "../common/utils/MyLazyDataSource";
 import { playListDB } from '../db/playListDB'
 import { relationalStore } from '@kit.ArkData'
 import { SongListItem } from '../components/common/SongListItem'
+import { subWindow } from '../common/utils/SubWindowTool'
 
 //歌曲播放页面
 @Entry
 @Component
 struct Play {
   @StorageProp('safeTop') safeTop: number = 0
+  @StorageProp('windowHeight') windowHeight: number = 0;
+  @StorageProp('windowWidth') windowWidth: number = 0
   @StorageProp('currentSong') currentSong: SongModel = new SongModel()
   @StorageProp('currentPlayList') currentPlayList:PlayListModel = new PlayListModel()
   @State playIndex:number = 0
@@ -29,7 +31,12 @@ struct Play {
   private uiContext: UIContext = this.getUIContext();
   private promptAction: PromptAction = this.uiContext.getPromptAction();  //提示弹窗
 
+
   aboutToAppear(): void {
+    //进来时销毁播放小窗口
+    if(subWindow.hasSubWindow){
+      subWindow.destroySubWindow()
+    }
     this.currentSong = (router.getParams() as routerParams<SongModel>).param
     this.playIndex = this.currentPlayList.songs.findIndex(song=>song.id === this.currentSong.id)
     //把数据放入懒加载数据类型中
@@ -44,6 +51,12 @@ struct Play {
       setTimeout(()=>{
         router.back()
       },1000)
+    }
+  }
+  aboutToDisappear(): void {
+    //离开时创建播放小窗口
+    if(!subWindow.hasSubWindow){
+      subWindow.createSubWindow('playSubWindow','pages/PlaySubWindow')
     }
   }
 
@@ -281,13 +294,10 @@ struct Play {
           })
       }
       Image($r("app.media.icon_prev"))
-        .fillColor(this.currentPlayList.songs.length > 1 ? Color.White : Color.Gray)
+        .fillColor(this.currentPlayList.songs.length > 1 ? Color.White : $r('app.color.disabled'))
         .width(30)
         .onClick(()=>{
-          if(this.playIndex !== -1){
-            this.playPrev()
-          }
-          // avPlayerManager.playPrev()
+          avPlayerManager.playPrev()
         })
       // 播放按钮
       Image(this.currentSong.isPlaying ? $r("app.media.icon_paused") : $r("app.media.icon_play"))
@@ -298,12 +308,10 @@ struct Play {
         })
       // 下一首
       Image($r("app.media.icon_next"))
-        .fillColor(this.currentPlayList.songs.length > 1 ? Color.White : Color.Gray)
+        .fillColor(this.currentPlayList.songs.length > 1 ? Color.White : $r('app.color.disabled'))
         .width(30)
         .onClick(()=>{
-          if(this.playIndex !== -1){
-            this.playNext()
-          }
+          avPlayerManager.playNext()
         })
       //播放列表
       Image($r("app.media.icon_play_list"))

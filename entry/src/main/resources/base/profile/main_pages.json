@@ -8,6 +8,7 @@
     "pages/MV",
     "pages/PlayMV",
     "pages/My",
-    "pages/CreateNewPlayList"
+    "pages/CreateNewPlayList",
+    "pages/PlaySubWindow"
   ]
 }

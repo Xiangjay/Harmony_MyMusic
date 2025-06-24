@@ -12,6 +12,7 @@ struct Index {
   @State currentIndex: number = 0;
   private tabController:TabsController = new TabsController()
 
+
   @Builder tabBarBuilder(title: string, targetIndex: number, icon: Resource) {
     Column({space:5}) {
       Image(icon)
@@ -65,14 +66,14 @@ struct Index {
       }
       .tabBar(this.tabBarBuilder('我的',3,$r("app.media.icon_my")))
     }
+    .padding({
+      top: this.safeTop
+    })
     .barHeight(BasicConstants.MAIN_TAB_BAR_HEIGHT)
     .scrollable(false)
     .backgroundColor($r('app.color.content_background'))
     .onChange((index:number)=>{
       this.currentIndex = index
-    })
-    .padding({
-      top: this.safeTop
     })
   }
 }

@@ -8,6 +8,7 @@ import { aVSessionManger } from '../common/utils/AVSessionManager';
 import {playListDB} from '../db/playListDB'
 import { recentSongsDB } from '../db/recentSongsDB';
 import { recentMVsDB } from '../db/recentMVsDB';
+import log from '@open/log';
 
 const DOMAIN = 0x0000;
 
@@ -38,6 +39,11 @@ export default class EntryAbility extends UIAbility {
       let windowClass: window.Window = windowStage.getMainWindowSync();
       // 1. 设置窗口全屏
       windowClass.setWindowLayoutFullScreen(true)
+      //存一下窗口宽高
+      const windowWidth = px2vp(windowClass.getWindowProperties().windowRect.width)
+      const windowHeight = px2vp(windowClass.getWindowProperties().windowRect.height)
+      AppStorage.setOrCreate<number>('windowWidth', windowWidth);
+      AppStorage.setOrCreate<number>('windowHeight', windowHeight);
       // 2. 获取布局避让遮挡的区域
       const top = windowClass.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM).topRect.height
       AppStorage.setOrCreate<number>('safeTop', px2vp(top));
@@ -96,6 +102,8 @@ export default class EntryAbility extends UIAbility {
       }
       hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
     });
+    //做播放器小窗口用
+    AppStorage.setOrCreate('windowStage', windowStage);
   }
 
   onWindowStageDestroy(): void {

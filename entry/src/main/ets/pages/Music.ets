@@ -132,6 +132,9 @@ struct Music {
     })
     //把数据放入懒加载数据类型中
     this.musicLazyData.pushAllData(this.playList.songs)
+    this.isLoading = false
+    this.songListHeight = '70%'
+    this.songListOpacity = 1
   }
   //通过传过来的歌手ID获取歌手详情及热门歌曲
   getSingerPlayListDetail = async (id:number) => {
@@ -223,14 +226,12 @@ struct Music {
     })
     //把数据放入懒加载数据类型中
     this.musicLazyData.pushAllData(this.playList.songs)
-    this.isLoading = false
     if(this.playListType === PlayListType.singer){
       this.songListHeight = '60%'
-    }else if(this.playListType === PlayListType.local){
-      this.songListHeight = '70%'
     }else {
       this.songListHeight = '65%'
     }
+    this.isLoading = false
     this.songListOpacity = 1
   }
   addPlayList2ToLocal = async ()=>{

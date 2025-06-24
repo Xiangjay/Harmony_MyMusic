@@ -1,4 +1,3 @@
-import log from "@open/log"
 import { BasicConstants } from "../common/constants/BasicConstants"
 import { playListDB } from "../db/playListDB"
 import { MVModel, mvRouterParamsModel, PlayListModel, SongModel } from "../models/DataModels"
@@ -62,7 +61,6 @@ export struct My {
   }
   getRecentMVs = async ()=>{
     const recentMVs = await recentMVsDB.queryData('RECENT_MVS')
-    log.info(recentMVs)
     //只取近7天的数据
     this.recentMVs = recentMVs.filter(item=>dayJsDiff(item.saveTime as number)<=7)
   }
