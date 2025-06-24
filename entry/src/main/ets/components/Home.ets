@@ -136,28 +136,22 @@ export struct Home {
           TabContent() {
             Recommend({currentIndex:this.currentIndex})
           }
-          .padding({left:10})
           .tabBar(this.tabBarBuilder('推荐',0))
           TabContent() {
             Newest()
           }
-          .padding({left:10})
           .tabBar(this.tabBarBuilder('最新',1))
           TabContent() {
             Rank()
           }
-          .padding({left:10})
           .tabBar(this.tabBarBuilder('排行榜',2))
           TabContent() {
             Program()
           }
-          .padding({left:10})
           .tabBar(this.tabBarBuilder('节目',3))
-
           TabContent() {
             Empty({isPage:false})
           }
-          .padding({left:10})
           .tabBar(this.tabBarBuilder('免费听',4))
         }
         .barHeight(50)
@@ -167,6 +161,10 @@ export struct Home {
         })
         .onChange((index:number)=>{
           this.currentIndex = index
+        })
+        .padding({
+          left:10,
+          right:10
         })
         .width(BasicConstants.FULL_WIDTH)
         .height(BasicConstants.FULL_HEIGHT)

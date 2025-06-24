@@ -170,7 +170,6 @@ export struct My {
           })
         }
       }
-      .padding({right:10})
       .width(BasicConstants.FULL_WIDTH)
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
@@ -179,7 +178,6 @@ export struct My {
           PlayListItem({playList:item,deletePlayList:this.deletePlayList})
         },(item:PlayListModel)=>item.id.toString())
       }
-      .padding({right:10})
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.Spring)
       .fadingEdge(true)
@@ -237,7 +235,6 @@ export struct My {
           radius:{topStart:LengthMetrics.vp(10),topEnd:LengthMetrics.vp(10)}
         })
       }
-      .padding({right:10})
       .width(BasicConstants.FULL_WIDTH)
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
@@ -400,7 +397,6 @@ export struct My {
       .alignItems(VerticalAlign.Center)
       MvSwiper({mvList:this.recentMVs})
     }
-    .padding({right:10})
   }
   @Builder allRecentMVsBuilder(){
     Column(){
@@ -491,7 +487,8 @@ export struct My {
     .backgroundColor($r('app.color.content_background'))
     .padding({
       top: this.safeTop,
-      left:10
+      left:10,
+      right:10
     })
   }
 }

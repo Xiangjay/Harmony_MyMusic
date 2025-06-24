@@ -127,7 +127,6 @@ export struct Rank {
       },(rank:PlayListModel)=>rank.id.toString())
     }
     .width(BasicConstants.FULL_WIDTH)
-    .padding({right:10})
     .margin({top:20})
   }
   @Builder topArtistsListBuilder(){
@@ -234,6 +233,7 @@ export struct Rank {
       .fadingEdge(true)
       .height(this.areaRankItemHeight)
     }
+    .width(BasicConstants.FULL_WIDTH)
     .bindSheet($$this.showAllArtists, this.allArtistsBuilder(), {
       title:{title:this.shownArea},
       height:'80%',

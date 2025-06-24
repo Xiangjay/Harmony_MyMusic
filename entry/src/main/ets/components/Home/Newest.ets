@@ -1,4 +1,4 @@
-import { getMusicBanner, getNewestAlbumsList, getNewestMVList, getNewestSongs } from '../../common/apis/HomeApis'
+import { getNewestAlbumsList, getNewestMVList, getNewestSongs } from '../../common/apis/HomeApis'
 import { BasicConstants } from '../../common/constants/BasicConstants'
 import {Title} from '../common/Title'
 import {PlayListModel,MVModel,musicRouterParamsModel, PlayListType, SongModel, areaSongs} from '../../models/DataModels'
@@ -6,10 +6,8 @@ import { myDataMerge } from '../../common/utils/CommonTools'
 import { Loading } from '../common/Loading'
 import { LengthMetrics, router } from '@kit.ArkUI'
 import { MvSwiper } from '../common/MvSwiper'
-import log from '@open/log'
 import { getSongUrlByIds } from '../../common/apis/MusicApis'
 import { MyLazyDataSource } from '../../common/utils/MyLazyDataSource'
-import { SongListItem } from '../common/SongListItem'
 
 @Component
 export struct Newest {
@@ -28,7 +26,7 @@ export struct Newest {
     res.albums.forEach(item=>{
       this.newestAlbumsList.push(myDataMerge<PlayListModel>(new PlayListModel(),item))
     })
-    this.isLoading = false
+    return Promise.resolve(true)
   }
   //获取新歌速递
   /*
@@ -57,7 +55,8 @@ export struct Newest {
     resJapan.slice(0,50).forEach((item:SongModel)=>{
       japanSongs.push(myDataMerge(new SongModel(),item))
     })
-    this.handleSongs(japanSongs,'日韩')
+    await this.handleSongs(japanSongs,'日韩')
+    return Promise.resolve(true)
   }
   handleSongs = async (song:Array<SongModel>,area:string) => {
     const songIds:number[] = []
@@ -102,13 +101,16 @@ export struct Newest {
     res.data.forEach(item=>{
       this.newestMVList.push(myDataMerge<MVModel>(new MVModel(),item))
     })
-    this.isLoading = false
+    return Promise.resolve(true)
   }
 
   aboutToAppear(): void {
-    this.getNewestAlbumsList()
-    this.getNewestSongs()
-    this.getNewestMVList()
+    Promise.all([this.getNewestAlbumsList(),this.getNewestSongs(),this.getNewestMVList()])
+      .then(res=>{
+        if(res.every(item=>item)){
+          this.isLoading = false
+        }
+      })
   }
 
   @Builder newestAlbumsBuilder(){
@@ -168,7 +170,6 @@ export struct Newest {
       }
       .listDirection(Axis.Horizontal)
       .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.None)
       .fadingEdge(true)
       .width(BasicConstants.FULL_WIDTH)
       .height(200)  //  变成横向布局后list会默认非常高，所以高度限制一下
@@ -325,7 +326,6 @@ export struct Newest {
       Title({title:'最新MV'})
       MvSwiper({mvList:this.newestMVList})
     }
-    .padding({right:10})
     .margin({bottom:20})
   }
 

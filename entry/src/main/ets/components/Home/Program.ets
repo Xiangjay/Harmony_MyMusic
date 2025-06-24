@@ -1,4 +1,3 @@
-import log from "@open/log";
 import { getAllPrograms } from "../../common/apis/HomeApis";
 import { BasicConstants } from "../../common/constants/BasicConstants";
 import { myDataMerge } from "../../common/utils/CommonTools";
@@ -72,7 +71,7 @@ export struct Program {
           Loading()
         }
       }
-      .padding({ top: 20,bottom:20,right:10 })
+      .padding({ top: 20,bottom:20})
     }
     .scrollBar(BarState.Off)
     .edgeEffect(EdgeEffect.Fade)

@@ -10,7 +10,6 @@ import {PlayListModel,SongModel,recommendDjProgram,musicRouterParamsModel,
   Artist,
   ProgramModel} from '../../models/DataModels'
 import { Loading } from '../common/Loading'
-import log from '@open/log'
 import { getSongUrlByIds } from '../../common/apis/MusicApis'
 import { MvSwiper } from '../common/MvSwiper'
 
@@ -33,7 +32,7 @@ export struct Recommend {
     res.result.forEach(item=>{
       this.recommendSongList.push(myDataMerge<PlayListModel>(new PlayListModel(),item))
     })
-    this.isLoading = false
+    return Promise.resolve(true)
   }
   //获取推荐MV
   getRecommendMVList = async () =>{
@@ -41,7 +40,7 @@ export struct Recommend {
     res.result.forEach(item=>{
       this.recommendMVList.push(myDataMerge<MVModel>(new MVModel(),item))
     })
-    this.isLoading = false
+    return Promise.resolve(true)
   }
   //获取推荐新歌
   getRecommendNewSongs = async () =>{
@@ -88,7 +87,7 @@ export struct Recommend {
         }
       })
     })
-    this.isLoading = false
+    return Promise.resolve(true)
   }
   //获取推荐节目
   getRecommendProgramsList = async () => {
@@ -96,14 +95,16 @@ export struct Recommend {
     res.programs.forEach(item=>{
       this.recommendPrograms.push(myDataMerge<ProgramModel>(new ProgramModel(),item))
     })
-    this.isLoading = false
+    return Promise.resolve(true)
   }
 
   aboutToAppear(): void {
-    this.getRecommendSongList()
-    this.getRecommendMVList()
-    this.getRecommendNewSongs()
-    this.getRecommendProgramsList()
+    Promise.all([this.getRecommendSongList(),this.getRecommendMVList(),this.getRecommendNewSongs(),this.getRecommendProgramsList()])
+      .then(res=>{
+        if (res.every(item=>item)) {
+          this.isLoading = false
+        }
+      })
   }
 
   @Builder recommendSongListBuilder(){
@@ -160,7 +161,7 @@ export struct Recommend {
       }
       .listDirection(Axis.Horizontal)
       .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.None)
+      // .edgeEffect(EdgeEffect.Fade)
       .fadingEdge(true)
       .width(BasicConstants.FULL_WIDTH)
       .height(this.songListItemHeight)
@@ -172,7 +173,6 @@ export struct Recommend {
       Title({title:'精选MV'})
       MvSwiper({mvList:this.recommendMVList})
     }
-    .padding({right:10})
   }
   @Builder recommendNewSongsBuilder(){
     Column({space:10}){
@@ -272,7 +272,6 @@ export struct Recommend {
       }
       .listDirection(Axis.Horizontal)
       .scrollBar(BarState.Off)
-      .edgeEffect(EdgeEffect.None)
       .fadingEdge(true)
       .width(BasicConstants.FULL_WIDTH)
       .height(this.djListItemHeight)

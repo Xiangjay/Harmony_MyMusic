@@ -450,9 +450,9 @@ struct Music {
         Row({space:5}){
           Image($r('app.media.icon_share'))
             .width(20)
-            .fillColor($r('app.color.disabled'))
+            .fillColor(Color.White)
           Text(this.playList.shareCount != 0 ? countTransform(this.playList.shareCount,false) : '分享')
-            .fontColor($r('app.color.disabled'))
+            .fontColor(Color.White)
         }
         .justifyContent(FlexAlign.Center)
       }
@@ -468,7 +468,7 @@ struct Music {
           Image($r('app.media.icon_comment'))
             .width(20)
           Text(this.playList.commentCount != 0 ? countTransform(this.playList.commentCount,false) : '评论')
-            .fontColor('#ffffff')
+            .fontColor(Color.White)
         }
         .justifyContent(FlexAlign.Center)
       }
