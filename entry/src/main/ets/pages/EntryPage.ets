@@ -10,7 +10,7 @@ import { preferences } from '@kit.ArkData'
 struct EntryPage {
   @StorageProp('safeTop') safeTop: number = 0;
   @StorageProp(BreakPointConstants.CURRENT_BREAKPOINT) currentBreakPoint: string = BreakPointConstants.BREAKPOINT_SM
-  @State timeLeft: number = 1
+  @State timeLeft: number = 3
   @State entryImages:ResourceStr[] = [$r('app.media.entry_Img1'),$r('app.media.entry_Img2')]
   @State entryImage:ResourceStr = ''
   private intervalId: number = 0
