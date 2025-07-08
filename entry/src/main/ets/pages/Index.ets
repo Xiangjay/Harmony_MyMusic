@@ -12,7 +12,6 @@ struct Index {
   @State currentIndex: number = 0;
   private tabController:TabsController = new TabsController()
 
-
   @Builder tabBarBuilder(title: string, targetIndex: number, icon: Resource) {
     Column({space:5}) {
       Image(icon)

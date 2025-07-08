@@ -1,7 +1,7 @@
 {
   "app": {
-    "bundleName": "com.example.mymusic",
-    "vendor": "example",
+    "bundleName": "com.xiang.mymusic",
+    "vendor": "xiang",
     "versionCode": 1000000,
     "versionName": "1.0.0",
     "icon": "$media:app_logo",
